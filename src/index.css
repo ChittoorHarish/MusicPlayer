@@ -1,13 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AuroraDeck Base Theme */
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: #081029; /* Midnight Indigo */
+  font-family: 'Inter', 'Satoshi', 'IBM Plex Sans', sans-serif;
+  color: white;
+  overflow-x: hidden;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+::selection {
+  background: rgba(0, 216, 198, 0.5);
+  color: #fff;
+}
+
+/* Optional global glow layer */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 10%, rgba(0,216,198,0.15), transparent 60%),
+              radial-gradient(circle at 80% 80%, rgba(155,125,255,0.1), transparent 60%);
+  z-index: -1;
 }
