@@ -9,8 +9,10 @@ export default function CreateOrJoinEvent() {
   const [showCreate, setShowCreate] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventCode, setEventCode] = useState('');
+  const [userName, setUserName] = useState('');
   const setEventData = useEventStore(state => state.setEventData);
   const { setRole } = useRoleStore();
+  const addParticipant = useEventStore(state => state.addParticipant);
 
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -29,10 +31,15 @@ export default function CreateOrJoinEvent() {
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
       const userId = 'user-' + Math.random().toString(36).substring(2, 9);
 
+      if (!userName.trim()) {
+        toast.error('Please enter your name');
+        return;
+      }
+
       const eventData = {
         id: code,
-        title: eventName.trim(),  // Using title instead of name for consistency
-        hostId: userId,  // Store the host's ID
+        title: eventName.trim(),
+        hostId: userId,
         createdAt: Date.now(),
         queue: [],
         settings: {
@@ -40,6 +47,12 @@ export default function CreateOrJoinEvent() {
           guestRequestsEnabled: true,
           requestCooldownMinutes: 25,
         },
+        participants: [{
+          id: userId,
+          name: userName.trim(),
+          role: 'host',
+          joinedAt: Date.now()
+        }]
       };
 
       // Store temporarily and show modal
@@ -60,6 +73,11 @@ export default function CreateOrJoinEvent() {
       return;
     }
 
+    if (!userName.trim()) {
+      toast.error('Please enter your name');
+      return;
+    }
+
     try {
       // Get the event data from Firestore
       const eventRef = doc(db, 'events', eventCode.toUpperCase());
@@ -76,8 +94,29 @@ export default function CreateOrJoinEvent() {
       };
 
       const userId = 'user-' + Math.random().toString(36).substring(2, 9);
+      
+      // Add the new participant
+      const updatedParticipants = [
+        ...(eventData.participants || []),
+        {
+          id: userId,
+          name: userName.trim(),
+          role: 'guest',
+          joinedAt: Date.now()
+        }
+      ];
 
-      setEventData(eventData);
+      // Update Firestore with new participant
+      await setDoc(eventRef, {
+        ...eventData,
+        participants: updatedParticipants
+      }, { merge: true });
+
+      // Update local state
+      setEventData({
+        ...eventData,
+        participants: updatedParticipants
+      });
       setRole('guest', userId);
       toast.success(`Joined ${eventData.title}`);
     } catch (error) {
@@ -91,13 +130,30 @@ export default function CreateOrJoinEvent() {
       <div className="max-w-md w-full mx-auto space-y-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Welcome to AuroraDeck</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Welcome to Rhythemic DJ</h1>
           <p className="text-gray-400">Create or join a music session</p>
         </div>
 
         {/* Conditional Rendering */}
         {showCreate ? (
           <form onSubmit={handleCreateEvent} className="space-y-4">
+            <div>
+              <label htmlFor="userName" className="block text-sm font-medium text-gray-300 mb-1">
+                Your Name
+              </label>
+              <input
+                type="text"
+                id="userName"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Enter your name"
+                required
+              />
+            </div>
+             <label htmlFor="userName" className="block text-sm font-medium text-gray-300 mb-1">
+                Event Name
+              </label>
             <input
               type="text"
               value={eventName}
@@ -121,14 +177,35 @@ export default function CreateOrJoinEvent() {
           </form>
         ) : (
           <form onSubmit={handleJoinEvent} className="space-y-4">
-            <input
-              type="text"
-              value={eventCode}
-              onChange={(e) => setEventCode(e.target.value.toUpperCase())}
-              placeholder="Enter event code..."
-              className="w-full px-4 py-3 bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-white/60"
-              maxLength={6}
-            />
+            <div>
+              <label htmlFor="joinUserName" className="block text-sm font-medium text-gray-300 mb-1">
+                Your Name
+              </label>
+              <input
+                type="text"
+                id="joinUserName"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Enter your name"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="eventCode" className="block text-sm font-medium text-gray-300 mb-1">
+                Event Code
+              </label>
+              <input
+                type="text"
+                id="eventCode"
+                value={eventCode}
+                onChange={(e) => setEventCode(e.target.value.toUpperCase())}
+                placeholder="Enter event code..."
+                className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                maxLength={6}
+                required
+              />
+            </div>
             <button
               type="submit"
               className="w-full py-3 bg-purple-500 rounded-lg hover:bg-purple-600 transition-colors"

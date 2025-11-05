@@ -9,6 +9,9 @@ const useEventStore = create((set) => ({
     maxQueuePerUser: 3,
     requestCooldownMinutes: 5,
   },
+  
+  // Last activity timestamp for each participant
+  participantActivity: {},
 
   setEventData: (data) => {
     console.log('Setting event data in store:', data);

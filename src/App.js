@@ -1,6 +1,8 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
 import { initializeStores } from './utils/storeUtils';
+import setupLocalSync from './services/localSync';
+import { setupParticipantSync } from './services/participantSync';
 import EventHeader from './components/EventHeader';
 import Player from './components/Player';
 import RotatingDeck from './components/RotatingDeck';
@@ -29,9 +31,23 @@ function App() {
   React.useEffect(() => {
     if (!eventData) {
       initializeStores();
+    } else {
+      // Set up local sync after event is initialized
+      const updateLocalState = setupLocalSync();
+      usePlayerStore.setState({ updateLocalState });
+
+      // Set up real-time participant sync
+      const unsubscribeParticipants = setupParticipantSync(eventData.id);
+
+      // Cleanup when component unmounts or event changes
+      return () => {
+        if (unsubscribeParticipants) {
+          unsubscribeParticipants();
+        }
+      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on app load
+  }, [eventData]); // Run when eventData changes
 
   // If no event, show join/create screen
   if (!eventData) return <CreateOrJoinEvent />;

@@ -100,19 +100,32 @@ const YouTubePlayer = ({ videoId, onStateChange, onError }) => {
               console.log('Song ended — attempting to play next song');
 
               try {
+                // First check if we're already at the end of the queue
+                const store = usePlayerStore.getState();
+                const queue = useQueueStore.getState().queue;
+                const currentIndex = queue.findIndex(s => s.id === store.currentSong?.id);
+                const isLastSong = currentIndex === queue.length - 1;
+
+                // Try to skip to next song
                 const nextPlayed = await skipSongRef.current();
+
                 if (!nextPlayed) {
                   console.log('No more songs in queue and no recommendation found — stopping playback');
                   setIsPlayingRef.current(false);
                   return;
                 }
 
-                // Get new current song after skip (might be a recommended one)
-                const { currentSong } = usePlayerStore.getState();
-                if (currentSong?.id) {
-                  console.log('Loading next song:', currentSong.title);
-                  safePlayerCall('loadVideoById', currentSong.id);
-                  // ensure play
+                // Get fresh state after skip
+                const freshState = usePlayerStore.getState();
+                if (freshState.currentSong?.id) {
+                  console.log('Loading next song:', freshState.currentSong.title, 
+                            isLastSong ? '(auto-recommended)' : '(from queue)');
+                  
+                  // Reset player state before loading new video
+                  safePlayerCall('stopVideo');
+                  await new Promise(resolve => setTimeout(resolve, 100)); // Brief pause
+                  
+                  safePlayerCall('loadVideoById', freshState.currentSong.id);
                   safePlayerCall('playVideo');
                   setIsPlayingRef.current(true);
                 }

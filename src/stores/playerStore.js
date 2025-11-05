@@ -11,13 +11,22 @@ const usePlayerStore = create((set, get) => ({
   duration: 0,
   crossfadeEnabled: false,
   playerInstance: null,
+  isLoadingNext: false,      // Flag to prevent multiple concurrent recommendations
 
   // Track played songs and signatures
   playedSongs: [],               // IDs of played songs
   playedSignatures: new Set(),   // Normalized title+artist for duplicate detection
   playedArtists: new Map(),      // Track artist frequency to avoid repeats
 
-  setIsPlaying: (isPlaying) => set({ isPlaying }),
+  setIsPlaying: (isPlaying) => {
+    const state = get();
+    set({ isPlaying });
+    
+    // If this is the host, sync the state
+    if (state.updateLocalState) {
+      state.updateLocalState();
+    }
+  },
 
   setCurrentSong: (song) =>
     set((state) => {
@@ -25,6 +34,11 @@ const usePlayerStore = create((set, get) => ({
         // Update played songs list (last 50)
         state.playedSongs.push(song.id);
         if (state.playedSongs.length > 50) state.playedSongs = state.playedSongs.slice(-50);
+        
+        // If this is the host, sync the state
+        if (state.updateLocalState) {
+          setTimeout(() => state.updateLocalState(), 0);
+        }
 
         // Track normalized title+artist signature
         const signature = `${song.title}-${song.artist}`.toLowerCase()
@@ -78,8 +92,11 @@ const usePlayerStore = create((set, get) => ({
    * Skip song or fetch new unique recommendation
    */
   skipSong: async () => {
-    const { currentSong, setCurrentSong } = get();
+    const { currentSong, setCurrentSong, isLoadingNext } = get();
     const { queue, addToQueue } = useQueueStore.getState();
+
+    // Prevent multiple concurrent recommendations
+    if (isLoadingNext) return false;
 
     // 1️⃣ Next song in queue
     if (currentSong && queue.length > 0) {
@@ -92,6 +109,9 @@ const usePlayerStore = create((set, get) => ({
     }
 
     if (!currentSong?.id) return false;
+
+    // Set loading flag
+    set({ isLoadingNext: true });
 
     try {
       // 2️⃣ Fetch related videos
@@ -174,6 +194,9 @@ const usePlayerStore = create((set, get) => ({
     } catch (err) {
       console.error('Error fetching recommendation:', err);
       return false;
+    } finally {
+      // Reset loading flag whether successful or not
+      set({ isLoadingNext: false });
     }
   },
 

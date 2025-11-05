@@ -20,6 +20,7 @@ function formatTime(seconds) {
 
 export default function FloatingDock() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const {
     isPlaying,
@@ -90,14 +91,40 @@ export default function FloatingDock() {
           <div className="flex items-center justify-between">
             {currentSong ? (
               <div className="flex items-center space-x-4 max-w-[300px]">
-                <img
-                  src={currentSong.thumbnail}
-                  alt={currentSong.title}
-                  className="w-12 h-12 rounded-lg"
-                />
-                <div className="flex flex-col truncate">
-                  <span className="text-white font-medium truncate">{currentSong.title}</span>
-                  <span className="text-white/60 text-sm truncate">{currentSong.artist}</span>
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden shadow-lg border border-white/10">
+                    <img
+                      src={currentSong.thumbnail}
+                      alt={currentSong.title}
+                      className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  {!canControl && currentSong && (
+                    <div className="absolute -top-2 -right-2">
+                      {isPlaying ? (
+                        <div className="flex items-center gap-1.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xs px-3 py-1 rounded-full shadow-lg border border-white/20">
+                          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                          <span className="font-medium">Live</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs px-3 py-1 rounded-full shadow-lg border border-white/20">
+                          <div className="w-2 h-2 rounded-full bg-white/80" />
+                          <span className="font-medium">Paused</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1 truncate">
+                  <span className="text-white font-medium text-base truncate">{currentSong.title}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/70 text-sm truncate font-medium">{currentSong.artist}</span>
+                    {!canControl && currentSong && (
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-indigo-300 border border-indigo-500/30 font-medium whitespace-nowrap">
+                        {isPlaying ? 'Live with host' : 'Synced with host'}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (

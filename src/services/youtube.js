@@ -16,7 +16,8 @@ export const formatDuration = (duration) => {
   return result;
 };
 
-export const searchMusic = async (query) => {
+// Search function with pagination support
+export const searchMusic = async (query, pageToken = '') => {
   try {
     const response = await axios.get(`${BASE_URL}/search`, {
       params: {
@@ -24,14 +25,14 @@ export const searchMusic = async (query) => {
         maxResults: 10,
         q: query + ' music',
         type: 'video',
-        videoCategoryId: '10', // Music category
-        key: API_KEY
+        videoCategoryId: '10',
+        key: API_KEY,
+        pageToken
       }
     });
 
     const videoIds = response.data.items.map(item => item.id.videoId).join(',');
-    
-    // Get additional details for each video
+
     const detailsResponse = await axios.get(`${BASE_URL}/videos`, {
       params: {
         part: 'contentDetails,statistics',
@@ -40,8 +41,7 @@ export const searchMusic = async (query) => {
       }
     });
 
-    // Combine search results with video details
-    return response.data.items.map((item, index) => ({
+    const results = response.data.items.map((item, index) => ({
       id: item.id.videoId,
       title: item.snippet.title,
       artist: item.snippet.channelTitle,
@@ -49,14 +49,20 @@ export const searchMusic = async (query) => {
       duration: formatDuration(detailsResponse.data.items[index].contentDetails.duration),
       views: parseInt(detailsResponse.data.items[index].statistics.viewCount).toLocaleString(),
       addedAt: new Date().toISOString(),
-      addedBy: null // Will be set when adding to queue
+      addedBy: null
     }));
+
+    return {
+      results,
+      nextPageToken: response.data.nextPageToken || null
+    };
   } catch (error) {
     console.error('YouTube API Error:', error);
     throw error;
   }
 };
 
+// Get individual video details
 export const getVideoDetails = async (videoId) => {
   try {
     const response = await axios.get(`${BASE_URL}/videos`, {

@@ -6,30 +6,52 @@ const SearchBar = ({ onResultSelect }) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [nextPageToken, setNextPageToken] = useState(null);
+  const [prevPageTokens, setPrevPageTokens] = useState([]); // store history of page tokens
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  const handleSearch = async (e, pageToken = '') => {
+    if (e) e.preventDefault();
     if (!query.trim()) return;
 
     setLoading(true);
     setError(null);
-    setResults([]);
+
+    // Clear results for new search
+    if (!pageToken) {
+      setResults([]);
+      setPrevPageTokens([]);
+      setNextPageToken(null);
+    }
 
     try {
-      console.log('Searching for:', query);
-      const searchResults = await searchMusic(query);
-      console.log('Search results:', searchResults);
-      if (searchResults && searchResults.length > 0) {
-        setResults(searchResults);
-      } else {
-        setError('No results found. Try a different search term.');
+      const { results: searchResults, nextPageToken: nextToken } = await searchMusic(query, pageToken);
+      setResults(searchResults);
+
+      // Update page token history for Back button
+      if (pageToken) {
+        setPrevPageTokens(prev => [...prev, pageToken]);
       }
+
+      setNextPageToken(nextToken || null);
     } catch (err) {
       console.error('Search error:', err);
-      setError(err.response?.data?.error?.message || 'Failed to search videos. Please try again.');
+      setError('Failed to search videos. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNext = async () => {
+    if (!nextPageToken) return;
+    await handleSearch(null, nextPageToken);
+  };
+
+  const handleBack = async () => {
+    if (prevPageTokens.length === 0) return;
+    const prevTokens = [...prevPageTokens];
+    const lastToken = prevTokens.pop(); // get previous page token
+    setPrevPageTokens(prevTokens);
+    await handleSearch(null, lastToken);
   };
 
   return (
@@ -51,9 +73,7 @@ const SearchBar = ({ onResultSelect }) => {
         </button>
       </form>
 
-      {error && (
-        <div className="text-red-500 mb-4">{error}</div>
-      )}
+      {error && <div className="text-red-500 mb-4">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {results.map((video) => (
@@ -78,6 +98,25 @@ const SearchBar = ({ onResultSelect }) => {
           </div>
         ))}
       </div>
+
+      {(nextPageToken || prevPageTokens.length > 0) && (
+        <div className="flex justify-center gap-4 mt-4">
+          <button
+            onClick={handleBack}
+            disabled={prevPageTokens.length === 0 || loading}
+            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+          >
+            Back
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={!nextPageToken || loading}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Loading...' : 'Next'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

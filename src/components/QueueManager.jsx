@@ -3,11 +3,20 @@ import { TrashIcon, ArrowUpIcon, ArrowDownIcon, PlayIcon } from '@heroicons/reac
 import useQueueStore from '../stores/queueStore';
 import usePlayerStore from '../stores/playerStore';
 import { useRoleStore } from '../stores/roleStore';
+import useEventStore from '../stores/eventStore';
+
+const formatDuration = (duration) => {
+  if (!duration) return '--:--';
+  const minutes = Math.floor(duration / 60);
+  const seconds = Math.floor(duration % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
 
 export default function QueueManager() {
   const queue = useQueueStore(state => state.queue);
   const removeFromQueue = useQueueStore(state => state.removeSong);
   const userRole = useRoleStore(state => state.userRole);
+  const eventData = useEventStore(state => state.eventData);
   const setCurrentSong = usePlayerStore(state => state.setCurrentSong);
 
   const handleDelete = (songId) => {
@@ -30,19 +39,30 @@ export default function QueueManager() {
       {queue.map((song, index) => (
         <div
           key={song.id}
-          className="flex items-center space-x-4 bg-white/5 p-4 rounded-lg"
+          className="flex items-center space-x-4 bg-white/5 p-4 rounded-lg hover:bg-white/10 transition-colors group relative overflow-hidden"
         >
-          <img
-            src={song.thumbnail}
-            alt={song.title}
-            className="w-12 h-12 rounded"
-          />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          <div className="relative z-10 flex-shrink-0">
+            <img
+              src={song.thumbnail}
+              alt={song.title}
+              className="w-12 h-12 rounded-lg shadow-lg transform group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="absolute inset-0 bg-black/20 rounded-lg" />
+          </div>
           
           <div className="flex-1 min-w-0">
-            <p className="text-white truncate">{song.title}</p>
-            <p className="text-white/60 text-sm truncate">
-              {song.artist}
+            <p className="text-white font-medium truncate group-hover:text-purple-300 transition-colors">
+              {song.title}
             </p>
+            <div className="flex items-center space-x-2">
+              <p className="text-white/60 text-sm truncate">
+                {song.artist}
+              </p>
+              <span className="text-purple-400/60 text-xs">
+                {formatDuration(song.duration)}
+              </span>
+            </div>
           </div>
 
           {/* Queue Controls */}
@@ -66,12 +86,27 @@ export default function QueueManager() {
             )}
 
             {userRole === 'guest' && (
-              <button
-                onClick={() => handleVoteSkip(song.id)}
-                className="px-3 py-1 text-sm bg-white/10 hover:bg-white/20 rounded"
-              >
-                Vote Skip
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handlePlay(song)}
+                  className="p-1 hover:bg-white/10 rounded group"
+                  title="Play this song"
+                >
+                  <PlayIcon className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                </button>
+                <button
+                  onClick={() => handleVoteSkip(song.id)}
+                  className="flex items-center space-x-1 px-3 py-1 text-sm bg-purple-500/20 hover:bg-purple-500/30 rounded-full transition-all transform hover:scale-105"
+                >
+                  <span className="text-purple-300">Vote Skip</span>
+                  <span className="text-xs bg-purple-500/30 px-2 py-0.5 rounded-full">0/3</span>
+                </button>
+                {song.addedBy === eventData?.userId && (
+                  <span className="text-xs px-2 py-1 bg-purple-500/10 rounded-full text-purple-300">
+                    Added by you
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </div>

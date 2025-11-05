@@ -7,15 +7,19 @@ import {
   SparklesIcon,
   ArrowUpIcon,
   ArrowDownIcon,
-  TrashIcon
+  TrashIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
 import useEventStore from '../stores/eventStore';
 import useQueueStore from '../stores/queueStore';
 import { useRoleStore } from '../stores/roleStore';
 import usePlayerStore from '../stores/playerStore';
 
+import ParticipantsList from './ParticipantsList';
+
 const tabs = [
   { id: 'queue', icon: QueueListIcon, label: 'Queue' },
+  { id: 'participants', icon: UsersIcon, label: 'Participants' },
   { id: 'chat', icon: ChatBubbleLeftIcon, label: 'Chat' },
   { id: 'reactions', icon: HeartIcon, label: 'Reactions' },
   { id: 'bots', icon: SparklesIcon, label: 'Bots' },
@@ -51,6 +55,8 @@ export default function SidePanel() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'participants':
+        return <ParticipantsList />;
       case 'queue':
         return (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
