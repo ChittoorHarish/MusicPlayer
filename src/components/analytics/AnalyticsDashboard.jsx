@@ -11,6 +11,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
+import ParticipantsList from '../ParticipantsList';
 
 ChartJS.register(
   CategoryScale,
@@ -87,7 +88,7 @@ export default function AnalyticsDashboard({ eventId }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Play Count Graph */}
-        <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
+      {/*  <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
           <h3 className="text-lg font-medium text-white mb-4">Play Activity</h3>
           <Line
             data={playCountData}
@@ -115,7 +116,7 @@ export default function AnalyticsDashboard({ eventId }) {
               },
             }}
           />
-        </div>
+        </div>*/}
 
         {/* Reactions Chart */}
         <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
@@ -149,26 +150,13 @@ export default function AnalyticsDashboard({ eventId }) {
         </div>
 
         {/* Guest Engagement */}
-        <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
-          <h3 className="text-lg font-medium text-white mb-4">Guest Engagement</h3>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/60">Active Guests</p>
-              <p className="text-2xl font-bold text-cyan-500">
-                {stats.guestEngagement.active}%
-              </p>
-            </div>
-            <div>
-              <p className="text-white/60">Passive Guests</p>
-              <p className="text-2xl font-bold text-purple-500">
-                {stats.guestEngagement.passive}%
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4 max-h-64 overflow-y-auto scrollbar-hide">
+  <ParticipantsList />
+</div>
+
 
         {/* Top Stats */}
-        <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
+      {/*  <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
           <h3 className="text-lg font-medium text-white mb-4">Quick Stats</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -202,7 +190,7 @@ export default function AnalyticsDashboard({ eventId }) {
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

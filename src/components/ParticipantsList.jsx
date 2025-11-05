@@ -31,7 +31,7 @@ export default function ParticipantsList() {
             className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-indigo-500 flex items-center justify-center">
                 <span className="text-white font-medium text-sm">
                   {participant.name.charAt(0).toUpperCase()}
                 </span>
@@ -39,16 +39,18 @@ export default function ParticipantsList() {
               <div className="flex flex-col">
                 <span className="text-white text-sm font-medium">{participant.name}</span>
                 <span className="text-white/60 text-xs">
-                  {participant.role === 'host' ? 'Host' : 'Guest'}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {participant.role === 'host' && (
+              {participant.role === 'host' ? (
                 <div className="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30">
                   <span className="text-purple-300 text-xs font-medium">Host</span>
                 </div>
-              )}
+              ):
+               <div className="px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/30">
+                  <span className="text-purple-300 text-xs font-medium">Guest</span>
+                </div>}
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             </div>
           </div>

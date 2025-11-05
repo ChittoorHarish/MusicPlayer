@@ -85,8 +85,9 @@ export default function FloatingDock() {
 
   return (
     <>
-      <div className="sticky top-0 z-10 bg-gradient-to-b">
-       <div className="flex flex-col space-y-2 ml-4 mr-4">
+<div className="sticky bottom-0 z-10 bg-gradient-to-b">
+   <div className="flex flex-col space-y-2 ml-4 mr-4">
+
           {/* Top: Track Info + Controls */}
           <div className="flex items-center justify-between">
             {currentSong ? (

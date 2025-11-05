@@ -84,7 +84,7 @@ function App() {
             {/* Left Section */}
             <div className="lg:col-span-2 space-y-6">
               <SearchBar onResultSelect={handleVideoSelect} />
-              {userRole === 'host' && <AnalyticsDashboard eventId={eventData?.id} />}
+              <AnalyticsDashboard eventId={eventData?.id} />
             </div>
 
             {/* Right Section */}
@@ -109,17 +109,17 @@ function App() {
             </div>
           </div>
         </div>
-          <div className="sticky bottom-0">
+          {/* <div className="sticky bottom-0">
            <Player />
           <FloatingDock />
-        </div>
+        </div> */}
 
         {/* Bottom Player */}
        
-        {/* <div className="fixed bottom-0 left-0 right-80 z-10">
+        <div className="fixed bottom-0 left-0 right-80 z-10">
           <Player />
           <FloatingDock />
-        </div> */}
+        </div>
         
       </div>
 
