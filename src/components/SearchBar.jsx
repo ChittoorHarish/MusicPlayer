@@ -80,7 +80,7 @@ const SearchBar = ({ onResultSelect }) => {
           <div
             key={video.id}
             onClick={() => onResultSelect(video)}
-            className="flex gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-500 cursor-pointer transition-colors"
+            className="flex gap-2 p-2 rounded-lg border border-gray-200 hover:border-blue-500 cursor-pointer transition-colors"
           >
             <img
               src={video.thumbnail}

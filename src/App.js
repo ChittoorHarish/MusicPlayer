@@ -115,11 +115,11 @@ function App() {
         </div> */}
 
         {/* Bottom Player */}
-       
+
         <div className="fixed bottom-0 left-0 right-80 z-10">
-          <Player />
+           <Player />
           <FloatingDock />
-        </div>
+          </div>
         
       </div>
 

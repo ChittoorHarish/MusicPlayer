@@ -25,6 +25,17 @@ ChartJS.register(
 );
 
 export default function AnalyticsDashboard({ eventId }) {
+  const containerRef = React.useRef(null);
+
+  // Add padding to the bottom when floating dock appears
+  React.useEffect(() => {
+    const adjustPadding = () => {
+      if (containerRef.current) {
+        containerRef.current.style.paddingBottom = '100px';
+      }
+    };
+    adjustPadding();
+  }, []);
   const [stats, setStats] = React.useState({
     playCount: [],
     skipCount: [],
@@ -83,10 +94,10 @@ export default function AnalyticsDashboard({ eventId }) {
   };
 
   return (
-    <div className="space-y-6 p-4">
+    <div ref={containerRef} className="space-y-6 p-4 pb-32 overflow-y-auto max-h-screen">
       <h2 className="text-2xl font-bold text-white mb-6">Event Analytics</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-0">
         {/* Play Count Graph */}
       {/*  <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
           <h3 className="text-lg font-medium text-white mb-4">Play Activity</h3>

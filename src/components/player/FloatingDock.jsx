@@ -85,8 +85,8 @@ export default function FloatingDock() {
 
   return (
     <>
-<div className="sticky bottom-0 z-10 bg-gradient-to-b">
-   <div className="flex flex-col space-y-2 ml-4 mr-4">
+<div className="sticky bottom-0 z-50 bg-gradient-to-b from-black/80 to-black">
+   <div className="flex flex-col space-y-2 px-4 py-2 backdrop-blur-lg">
 
           {/* Top: Track Info + Controls */}
           <div className="flex items-center justify-between">

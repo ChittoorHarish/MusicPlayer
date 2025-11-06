@@ -20,6 +20,7 @@
     "axios": "^1.12.2",
     "chart.js": "^4.5.1",
     "firebase": "^9.23.0",
+    "framer-motion": "^12.23.24",
     "lodash": "^4.17.21",
     "nanoid": "^5.0.4",
     "next": "^16.0.0",

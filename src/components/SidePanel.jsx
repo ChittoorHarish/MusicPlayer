@@ -14,6 +14,7 @@ import useEventStore from '../stores/eventStore';
 import useQueueStore from '../stores/queueStore';
 import { useRoleStore } from '../stores/roleStore';
 import usePlayerStore from '../stores/playerStore';
+import useReactionsStore from '../stores/reactionsStore';
 
 const tabs = [
   { id: 'queue', icon: QueueListIcon, label: 'Queue' },
@@ -133,12 +134,19 @@ export default function SidePanel() {
         );
 
       case 'reactions':
+        if (isHost) return null;
+        
         return (
           <div className="flex-1 overflow-y-auto p-4">
             <div className="grid grid-cols-3 gap-4">
-              {['👍', '❤️', '🔥', '😂', '🎵', '🎉'].map((emoji) => (
+              {['👍', '🔥', '😂', '💃', '👎'].map((emoji) => (
                 <button
                   key={emoji}
+                  onClick={() => {
+                    if (!isHost && eventData?.id) {
+                      useReactionsStore.getState().addReaction(eventData.id, emoji);
+                    }
+                  }}
                   className="bg-white/5 p-4 rounded-lg text-center hover:bg-white/10 transition-colors"
                 >
                   <span className="text-4xl">{emoji}</span>
