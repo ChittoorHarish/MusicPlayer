@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { searchMusic } from '../services/youtube';
 import VideoPreviewModal from './modals/VideoPreviewModal';
-import { PlayCircleIcon, PlusCircleIcon } from '@heroicons/react/24/solid';
+import { MusicalNoteIcon, PlusCircleIcon,VideoCameraIcon } from '@heroicons/react/24/solid';
 
 const SearchBar = ({ onResultSelect }) => {
   const [query, setQuery] = useState('');
@@ -73,7 +73,7 @@ const SearchBar = ({ onResultSelect }) => {
           <button
             type="submit"
             disabled={loading}
-             className="px-6 py-2 bg-gradient-to-r from-green-500 via-teal-600 to-blue-500 rounded-lg hover:from-green-500 hover:to-teal-500 transition-all duration-300 font-semibold text-white shadow-lg"
+             className="px-6 py-2 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all duration-300 font-semibold text-white shadow-lg"
             
           >
             {loading ? 'Searching...' : 'Search'}
@@ -106,7 +106,7 @@ const SearchBar = ({ onResultSelect }) => {
                   className="text-white hover:text-purple-400 transition-colors"
                   title="Preview"
                 >
-                  <PlayCircleIcon className="w-8 h-8" />
+                  <VideoCameraIcon className="w-8 h-8" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -116,7 +116,7 @@ const SearchBar = ({ onResultSelect }) => {
                   className="text-white hover:text-blue-400 transition-colors"
                   title="Add to queue"
                 >
-                  <PlusCircleIcon className="w-8 h-8" />
+                  <MusicalNoteIcon className="w-8 h-8" />
                 </button>
               </div>
             </div>

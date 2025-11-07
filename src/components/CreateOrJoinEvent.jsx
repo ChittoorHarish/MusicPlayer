@@ -17,6 +17,7 @@ export default function CreateOrJoinEvent() {
   const [tempEventData, setTempEventData] = useState(null);
   const [tempUserId, setTempUserId] = useState(null);
 
+  // Create Event
   const handleCreateEvent = async (e) => {
     e.preventDefault();
     if (!eventName.trim()) return toast.error('Please enter an event name');
@@ -43,6 +44,7 @@ export default function CreateOrJoinEvent() {
     }
   };
 
+  // Join Event
   const handleJoinEvent = async (e) => {
     e.preventDefault();
     if (!eventCode.trim()) return toast.error('Please enter an event code');
@@ -64,7 +66,7 @@ export default function CreateOrJoinEvent() {
     }
   };
 
-  // Animated particles
+  // Animated particles (luxury colors)
   const [particles, setParticles] = useState([]);
   useEffect(() => {
     const temp = [];
@@ -75,8 +77,8 @@ export default function CreateOrJoinEvent() {
         size: Math.random() * 5 + 1,
         speedX: Math.random() * 0.4 - 0.2,
         speedY: Math.random() * 0.6 + 0.2,
-        color: `hsla(${160 + Math.random()*60},80%,70%,0.7)`, // green-blue
-        blur: Math.random()*3 + 1
+        color: `hsla(${180 + Math.random() * 180}, 100%, 70%, 0.7)`, // cyan → magenta
+        blur: Math.random() * 3 + 1
       });
     }
     setParticles(temp);
@@ -104,9 +106,9 @@ export default function CreateOrJoinEvent() {
         y: Math.random() * window.innerHeight,
         width: Math.random() * 350 + 200,
         speed: Math.random() * 0.4 + 0.2,
-        hue: 160 + Math.random()*60, // blue-green hues
-        rotate: Math.random()*360,
-        rotateSpeed: Math.random()*0.15 - 0.075
+        hue: 180 + Math.random() * 180, // cyan → magenta
+        rotate: Math.random() * 360,
+        rotateSpeed: Math.random() * 0.15 - 0.075
       });
     }
     setRibbons(temp);
@@ -131,10 +133,10 @@ export default function CreateOrJoinEvent() {
     for (let i = 0; i < 12; i++) {
       temp.push({
         x: Math.random() * window.innerWidth,
-        width: Math.random()*250 + 250,
-        hue: 160 + Math.random()*60, // blue-green
-        angle: Math.random()*360,
-        speed: Math.random()*0.2 + 0.05
+        width: Math.random() * 250 + 250,
+        hue: 180 + Math.random() * 180, // cyan → magenta
+        angle: Math.random() * 360,
+        speed: Math.random() * 0.2 + 0.05
       });
     }
     setRays(temp);
@@ -142,7 +144,7 @@ export default function CreateOrJoinEvent() {
 
   useEffect(() => {
     const animate = () => {
-      setRays(prev => prev.map(r => ({...r, angle: (r.angle + r.speed*5)%360})));
+      setRays(prev => prev.map(r => ({ ...r, angle: (r.angle + r.speed * 5) % 360 })));
       requestAnimationFrame(animate);
     };
     animate();
@@ -150,88 +152,99 @@ export default function CreateOrJoinEvent() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4">
-      {/* Base Gradient - Blue-Green Luxury */}
+      {/* Base Gradient - Luxurious futuristic colors */}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(circle at 30% 30%, #001f2d, #003344, #004455, #002222)'
-      }}/>
+        background: 'radial-gradient(circle at 30% 30%, #020617, #05091f, #000000)'
+      }} />
 
       {/* Particles */}
-      {particles.map((p,i)=>(
+      {particles.map((p, i) => (
         <div key={i} className="absolute rounded-full" style={{
           width: `${p.size}px`, height: `${p.size}px`,
           top: `${p.y}px`, left: `${p.x}px`,
           background: p.color,
           filter: `blur(${p.blur}px)`,
-          pointerEvents:'none'
+          pointerEvents: 'none'
         }}/>
       ))}
 
       {/* Ribbons */}
-      {ribbons.map((r,i)=>(
+      {ribbons.map((r, i) => (
         <div key={i} className="absolute" style={{
-          width: `${r.width}px`, height:'2px',
+          width: `${r.width}px`, height: '2px',
           top: `${r.y}px`, left: `${r.x - r.width/2}px`,
           background: `linear-gradient(90deg, hsla(${r.hue},100%,60%,0.9), transparent)`,
           transform: `rotate(${r.rotate}deg)`,
-          filter:'blur(1.5px)',
-          opacity:0.9,
-          pointerEvents:'none'
+          filter: 'blur(0.5px)',
+          opacity: 0.9,
+          pointerEvents: 'none'
         }}/>
       ))}
 
-      {/* Glowing rays */}
-      {rays.map((r,i)=>(
+      {/* Rays */}
+      {rays.map((r, i) => (
         <div key={i} className="absolute" style={{
-          width: `${r.width}px`, height:'5px',
-          top:0, left:`${r.x - r.width/2}px`,
+          width: `${r.width}px`, height: '5px',
+          top: 0, left: `${r.x - r.width/2}px`,
           background: `linear-gradient(90deg, hsla(${r.hue},100%,60%,0.5), transparent)`,
-          transform:`rotate(${r.angle}deg)`,
-          filter:'blur(6px)',
-          opacity:0.9,
-          pointerEvents:'none'
+          transform: `rotate(${r.angle}deg)`,
+          filter: 'blur(6px)',
+          opacity: 0.9,
+          pointerEvents: 'none'
         }}/>
       ))}
 
       {/* Main Card */}
-      <div className="relative max-w-md w-full mx-auto space-y-6 backdrop-blur-md bg-black/30 border border-white/10 rounded-3xl p-6 shadow-2xl z-10">
+      <div className="relative max-w-md w-full mx-auto space-y-6 backdrop-blur-md bg-black/30 border border-cyan-400/20 rounded-3xl p-6 shadow-[0_0_40px_rgba(0,255,255,0.3)] z-10">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold text-white mb-2 tracking-wide drop-shadow-lg">Welcome to Rhythemic DJ</h1>
+          <h1 className="text-2xl font-extrabold text-white mb-2 tracking-wide drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">Welcome to Rhythemic DJ</h1>
           <p className="text-gray-300">Create or join a music session</p>
         </div>
 
         {showCreate ? (
           <form onSubmit={handleCreateEvent} className="space-y-4">
-            <input type="text" placeholder="Your Name" value={userName} onChange={e=>setUserName(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"/>
-            <input type="text" placeholder="Event Name" value={eventName} onChange={e=>setEventName(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"/>
-            <button type="submit" className="w-full py-3 bg-gradient-to-r from-green-400 via-teal-500 to-blue-600 rounded-lg hover:from-green-500 hover:to-teal-600 transition-all duration-300 font-semibold text-white shadow-lg">Create Event</button>
-            <button type="button" onClick={()=>setShowCreate(false)} className="w-full py-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">Back</button>
+            <input type="text" placeholder="Your Name" value={userName} onChange={e => setUserName(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg bg-black/30 border border-cyan-400/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"/>
+            <input type="text" placeholder="Event Name" value={eventName} onChange={e => setEventName(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg bg-black/30 border border-cyan-400/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"/>
+            <button type="submit" className="w-full py-3 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all duration-300 font-semibold text-white shadow-lg">Create Event</button>
+            <button type="button" onClick={() => setShowCreate(false)} className="w-full py-3 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">Back</button>
           </form>
         ) : (
           <form onSubmit={handleJoinEvent} className="space-y-4">
-            <input type="text" placeholder="Your Name" value={userName} onChange={e=>setUserName(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"/>
-            <input type="text" placeholder="Event Code" value={eventCode} onChange={e=>setEventCode(e.target.value.toUpperCase())} maxLength={6}
-              className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"/>
-            <button type="submit" className="w-full py-3 bg-gradient-to-r from-green-400 via-teal-500 to-blue-600 rounded-lg hover:from-green-500 hover:to-teal-600 transition-all duration-300 font-semibold text-white shadow-lg">Join Event</button>
-            <button type="button" onClick={()=>setShowCreate(true)} className="w-full py-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">Create Event Instead</button>
+            <input type="text" placeholder="Your Name" value={userName} onChange={e => setUserName(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg bg-black/30 border border-cyan-400/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"/>
+            <input type="text" placeholder="Event Code" value={eventCode} onChange={e => setEventCode(e.target.value.toUpperCase())} maxLength={6}
+              className="w-full px-4 py-2 rounded-lg bg-black/30 border border-cyan-400/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"/>
+            <button type="submit" className="w-full py-3 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all duration-300 font-semibold text-white shadow-lg">Join Event</button>
+            <button type="button" onClick={() => setShowCreate(true)} className="w-full py-3 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">Create Event Instead</button>
           </form>
         )}
 
         {showCodeModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-gray-900 rounded-xl p-6 max-w-sm w-full border border-white/10">
+            <div className="bg-black/90 rounded-xl p-6 max-w-sm w-full border border-cyan-400/20 shadow-lg">
               <h3 className="text-xl font-bold text-white mb-4">Event Created Successfully!</h3>
               <p className="text-white/70 mb-4">Share this code with your guests:</p>
               <div className="bg-black/30 p-4 rounded-lg text-center mb-6">
-                <p className="text-3xl font-mono text-green-400 tracking-wider">{generatedCode}</p>
+                <p className="text-3xl font-mono text-cyan-400 tracking-wider">{generatedCode}</p>
               </div>
               <div className="flex justify-end space-x-3">
-                <button onClick={()=>{navigator.clipboard.writeText(generatedCode); toast.success('Code copied!');}}
-                className="px-6 py-2 bg-gradient-to-r from-green-500 via-teal-600 to-blue-500 rounded-lg hover:from-green-500 hover:to-teal-500 transition-all duration-300 font-semibold text-white shadow-lg">Copy Code</button>
-                <button onClick={async()=>{try{await setDoc(doc(db,'events',tempEventData.id),tempEventData); setEventData(tempEventData); setRole('host', tempUserId); setShowCodeModal(false); toast.success('Event created successfully!');}catch(e){console.error(e);toast.error('Failed to create event');}}}
-                  className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">Continue</button>
+                <button onClick={() => { navigator.clipboard.writeText(generatedCode); toast.success('Code copied!'); }}
+                  className="px-6 py-2 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all duration-300 font-semibold text-white shadow-lg">Copy Code</button>
+                <button onClick={async () => {
+                  try {
+                    await setDoc(doc(db, 'events', tempEventData.id), tempEventData);
+                    setEventData(tempEventData);
+                    setRole('host', tempUserId);
+                    setShowCodeModal(false);
+                    toast.success('Event created successfully!');
+                  } catch (e) {
+                    console.error(e);
+                    toast.error('Failed to create event');
+                  }
+                }}
+                  className="px-4 py-2 bg-black/20 text-white rounded-lg hover:bg-black/30 transition-colors">Continue</button>
               </div>
             </div>
           </div>
