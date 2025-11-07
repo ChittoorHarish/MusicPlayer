@@ -229,7 +229,7 @@ export default function CreateOrJoinEvent() {
               </div>
               <div className="flex justify-end space-x-3">
                 <button onClick={()=>{navigator.clipboard.writeText(generatedCode); toast.success('Code copied!');}}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">Copy Code</button>
+                className="px-6 py-2 bg-gradient-to-r from-green-500 via-teal-600 to-blue-500 rounded-lg hover:from-green-500 hover:to-teal-500 transition-all duration-300 font-semibold text-white shadow-lg">Copy Code</button>
                 <button onClick={async()=>{try{await setDoc(doc(db,'events',tempEventData.id),tempEventData); setEventData(tempEventData); setRole('host', tempUserId); setShowCodeModal(false); toast.success('Event created successfully!');}catch(e){console.error(e);toast.error('Failed to create event');}}}
                   className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">Continue</button>
               </div>
