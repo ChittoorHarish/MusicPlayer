@@ -46,7 +46,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Crossfade Toggle */}
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <label className="text-white/80">Crossfade between songs</label>
             <button
               onClick={() => setCrossfadeEnabled(!crossfadeEnabled)}
@@ -60,7 +60,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 }`}
               />
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

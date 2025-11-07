@@ -132,7 +132,10 @@ export default function AnalyticsDashboard({ eventId }) {
         {/* Reactions Chart */}
         <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
           <h3 className="text-lg font-medium text-white mb-4">Reactions</h3>
-          <Bar
+           <div className="text-white/60 py-8">
+              Reactions feature coming soon
+            </div>
+         {/* <Bar
             data={reactionData}
             options={{
               responsive: true,
@@ -157,7 +160,7 @@ export default function AnalyticsDashboard({ eventId }) {
                 },
               },
             }}
-          />
+          />*/}
         </div>
 
         {/* Guest Engagement */}

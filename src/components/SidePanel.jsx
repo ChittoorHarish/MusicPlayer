@@ -14,7 +14,6 @@ import useEventStore from '../stores/eventStore';
 import useQueueStore from '../stores/queueStore';
 import { useRoleStore } from '../stores/roleStore';
 import usePlayerStore from '../stores/playerStore';
-import useReactionsStore from '../stores/reactionsStore';
 
 const tabs = [
   { id: 'queue', icon: QueueListIcon, label: 'Queue' },
@@ -134,19 +133,12 @@ export default function SidePanel() {
         );
 
       case 'reactions':
-        if (isHost) return null;
-        
         return (
           <div className="flex-1 overflow-y-auto p-4">
             <div className="grid grid-cols-3 gap-4">
-              {['👍', '🔥', '😂', '💃', '👎'].map((emoji) => (
+              {['👍', '❤️', '🔥', '😂', '🎵', '🎉'].map((emoji) => (
                 <button
                   key={emoji}
-                  onClick={() => {
-                    if (!isHost && eventData?.id) {
-                      useReactionsStore.getState().addReaction(eventData.id, emoji);
-                    }
-                  }}
                   className="bg-white/5 p-4 rounded-lg text-center hover:bg-white/10 transition-colors"
                 >
                   <span className="text-4xl">{emoji}</span>
@@ -202,10 +194,16 @@ export default function SidePanel() {
               </label>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
-                  type="checkbox"
-                  checked={settings.guestRequestsEnabled}
+                  // type="checkbox"
+                  // checked={settings.guestRequestsEnabled}
+                  // onChange={(e) =>
+                  //   updateSettings({ guestRequestsEnabled: e.target.checked })
+                  // }
+                  // className="sr-only peer"
+                   type="checkbox"
+                  checked={settings.explicitFilter}
                   onChange={(e) =>
-                    updateSettings({ guestRequestsEnabled: e.target.checked })
+                    updateSettings({ explicitFilter: e.target.checked })
                   }
                   className="sr-only peer"
                 />
@@ -213,7 +211,7 @@ export default function SidePanel() {
               </label>
             </div>
 
-            <div>
+            {/* <div>
               <label className="text-white font-medium block mb-2">
                 Vote Skip Threshold (%)
               </label>
@@ -230,9 +228,9 @@ export default function SidePanel() {
               <span className="text-white/60 text-sm">
                 {settings.voteSkipThreshold}%
               </span>
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <label className="text-white font-medium block mb-2">
                 Request Interval (minutes)
               </label>
@@ -246,9 +244,9 @@ export default function SidePanel() {
                 }
                 className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-white"
               />
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <label className="text-white font-medium block mb-2">
                 Explicit Filter
               </label>
@@ -263,7 +261,7 @@ export default function SidePanel() {
                 />
                 <div className="w-11 h-6 bg-white/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
               </label>
-            </div>
+            </div> */}
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">

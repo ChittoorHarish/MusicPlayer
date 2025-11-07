@@ -195,7 +195,7 @@ export default function FloatingDock() {
 
             {canControl && (
               <>
-                <button
+                {/* <button
                   onClick={() => setCrossfadeEnabled(!crossfadeEnabled)}
                   className={`p-2 rounded-full transition-colors ${
                     crossfadeEnabled ? 'bg-cyan-500/20 text-cyan-500' : 'text-white/60 hover:bg-white/10'
@@ -203,7 +203,7 @@ export default function FloatingDock() {
                   title="Toggle Crossfade"
                 >
                   <ArrowPathIcon className="w-5 h-5" />
-                </button>
+                </button> */}
 
                 <button
                   onClick={() => setIsSettingsOpen(true)}
