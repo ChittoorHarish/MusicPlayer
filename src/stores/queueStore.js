@@ -8,58 +8,57 @@ import {
   arrayUnion,
   getDoc,
 } from "firebase/firestore";
+import { useRoleStore } from "./roleStore";
 
 const useQueueStore = create((set, get) => ({
   queue: [],
   roomId: null,
   unsubscribe: null,
 
-  /** 🎧 Initialize real-time listener for host or guest */
+  /** 🔹 Initialize Firestore listener for the queue */
   initQueueListener: async (roomId) => {
     if (!roomId) return;
 
-    // Stop previous listener (if exists)
+    // Stop previous listener if it exists
     const existingUnsub = get().unsubscribe;
     if (existingUnsub) existingUnsub();
 
     const queueRef = doc(db, "queues", roomId);
 
-    // Ensure queue document exists
-    try {
-      const docSnap = await getDoc(queueRef);
-      if (!docSnap.exists()) {
-        await setDoc(queueRef, { songs: [] });
-      }
-    } catch (err) {
-      console.error("Error initializing queue document:", err);
-      return;
+    // Create queue doc if missing
+    const docSnap = await getDoc(queueRef);
+    if (!docSnap.exists()) {
+      await setDoc(queueRef, { songs: [] });
     }
 
-    // Real-time sync listener
+    // Listen for real-time updates
     const unsubscribe = onSnapshot(queueRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
         set({ queue: data.songs || [] });
-      } else {
-        set({ queue: [] });
       }
     });
 
     set({ roomId, unsubscribe });
   },
 
-  /** 🎵 Add a song to queue (reflects to both host & guests) */
-  addToQueue: async (song, addedBy = "guest") => {
+  /** 🔹 Add a song to queue — detects Host or Guest automatically */
+  addToQueue: async (song) => {
     const { roomId } = get();
     if (!roomId) {
-      console.warn("⚠️ No roomId set for queue store.");
+      console.warn("No roomId set in queueStore.");
       return;
     }
 
+    // ✅ Get role & userId from roleStore
+    const { userRole, userId } = useRoleStore.getState();
+
     const queueRef = doc(db, "queues", roomId);
+
     const songObj = {
       ...song,
-      addedBy,
+      addedBy: userRole || "guest", // 'host' or 'guest'
+      addedById: userId || "unknown",
       timestamp: Date.now(),
     };
 
@@ -69,15 +68,10 @@ const useQueueStore = create((set, get) => ({
       });
     } catch (err) {
       console.error("Error adding song:", err);
-
-      // Handle missing doc (if deleted somehow)
-      if (err.code === "not-found") {
-        await setDoc(queueRef, { songs: [songObj] });
-      }
     }
   },
 
-  /** ❌ Remove song and sync with Firestore */
+  /** 🔹 Remove a song from the queue */
   removeItem: async (index) => {
     const { queue, roomId } = get();
     if (!roomId) return;
@@ -86,18 +80,13 @@ const useQueueStore = create((set, get) => ({
     const updatedQueue = [...queue];
     updatedQueue.splice(index, 1);
 
-    try {
-      await updateDoc(queueRef, { songs: updatedQueue });
-      set({ queue: updatedQueue });
-    } catch (err) {
-      console.error("Error removing song:", err);
-    }
+    await updateDoc(queueRef, { songs: updatedQueue });
+    set({ queue: updatedQueue });
   },
 
-  /** 🔁 Move song up/down in queue */
+  /** 🔹 Move songs up/down and sync to Firestore */
   moveItem: async (fromIndex, toIndex) => {
     const { queue, roomId } = get();
-    if (!roomId) return;
     if (toIndex < 0 || toIndex >= queue.length) return;
 
     const updatedQueue = [...queue];
@@ -105,34 +94,19 @@ const useQueueStore = create((set, get) => ({
     updatedQueue.splice(toIndex, 0, moved);
 
     const queueRef = doc(db, "queues", roomId);
-    try {
-      await updateDoc(queueRef, { songs: updatedQueue });
-      set({ queue: updatedQueue });
-    } catch (err) {
-      console.error("Error moving song:", err);
-    }
+    await updateDoc(queueRef, { songs: updatedQueue });
+    set({ queue: updatedQueue });
   },
 
-  /** 🛑 Stop real-time listener */
+  /** 🔹 Stop listening when user leaves the event */
   stopListener: () => {
     const unsub = get().unsubscribe;
     if (unsub) unsub();
     set({ unsubscribe: null, queue: [] });
   },
 
-  /** 🧹 Clear queue (local + Firestore) */
-  clearQueue: async () => {
-    const { roomId } = get();
+  clearQueue: () => {
     set({ queue: [] });
-
-    if (roomId) {
-      try {
-        const queueRef = doc(db, "queues", roomId);
-        await updateDoc(queueRef, { songs: [] });
-      } catch (err) {
-        console.warn("Error clearing queue in Firestore:", err);
-      }
-    }
   },
 }));
 

@@ -25,6 +25,7 @@ function App() {
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentSong = usePlayerStore((state) => state.currentSong);
   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const { role, userId } = useRoleStore();
 
   React.useEffect(() => {
     if (!eventData) {
@@ -40,8 +41,15 @@ function App() {
   if (!eventData) return <CreateOrJoinEvent />;
 
   const handleVideoSelect = (video) => {
-    const songToAdd = { ...video, addedBy: eventData?.userId };
-    addToQueue(songToAdd);
+    const addedBy = role === "host" ? "host" : "guest";
+    const songToAdd = {
+      ...video,
+      addedBy,
+      addedById: userId,
+      addedAt: Date.now(),
+    };
+
+    addToQueue(songToAdd, addedBy);
     if (!currentSong) setCurrentSong(songToAdd);
   };
 
@@ -90,7 +98,6 @@ function App() {
 
       {/* ✅ Mobile Side Panel */}
       <div className="lg:hidden fixed top-0 right-0 bottom-0 w-full max-w-[320px] transform translate-x-full transition-transform duration-300 z-50 mobile-side-panel bg-gray-900/95 backdrop-blur-lg">
-        {/* Header with Close Button */}
         <div className="sticky top-0 flex justify-between items-center p-4 border-b border-white/10 bg-gray-900/95 backdrop-blur-lg">
           <h2 className="text-lg font-semibold text-white">Menu</h2>
           <button

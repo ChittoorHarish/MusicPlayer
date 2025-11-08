@@ -86,7 +86,7 @@ export default function SidePanel() {
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm truncate">{song.title}</p>
                     <p className="text-white/60 text-xs truncate">
-                      Added by {song.addedBy || "Unknown"}
+                      Added by {song.addedBy === "host" ? "Host" : "Guest"}
                     </p>
                   </div>
                 </div>
