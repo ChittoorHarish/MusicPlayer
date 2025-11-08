@@ -1,70 +1,80 @@
-import React from 'react';
-import { 
-  ChatBubbleLeftIcon, 
-  QueueListIcon, 
-  HeartIcon, 
+// src/components/SidePanel.jsx
+import React, { useEffect } from "react";
+import {
+  ChatBubbleLeftIcon,
+  QueueListIcon,
+  HeartIcon,
   Cog6ToothIcon,
   SparklesIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   TrashIcon,
-  UsersIcon
-} from '@heroicons/react/24/outline';
-import useEventStore from '../stores/eventStore';
-import useQueueStore from '../stores/queueStore';
-import { useRoleStore } from '../stores/roleStore';
-import usePlayerStore from '../stores/playerStore';
+} from "@heroicons/react/24/outline";
+import useEventStore from "../stores/eventStore";
+import useQueueStore from "../stores/queueStore";
+import { useRoleStore } from "../stores/roleStore";
+import usePlayerStore from "../stores/playerStore";
 
 const tabs = [
-  { id: 'queue', icon: QueueListIcon, label: 'Queue' },
-  { id: 'chat', icon: ChatBubbleLeftIcon, label: 'Chat' },
-  { id: 'reactions', icon: HeartIcon, label: 'Reactions' },
-  { id: 'bots', icon: SparklesIcon, label: 'Bots' },
-  { id: 'settings', icon: Cog6ToothIcon, label: 'Settings' },
+  { id: "queue", icon: QueueListIcon, label: "Queue" },
+  { id: "chat", icon: ChatBubbleLeftIcon, label: "Chat" },
+  { id: "reactions", icon: HeartIcon, label: "Reactions" },
+  { id: "bots", icon: SparklesIcon, label: "Bots" },
+  { id: "settings", icon: Cog6ToothIcon, label: "Settings" },
 ];
 
 export default function SidePanel() {
-  const [activeTab, setActiveTab] = React.useState('queue');
-  
+  const [activeTab, setActiveTab] = React.useState("queue");
+
   // Event and settings
-  const eventData = useEventStore(state => state.eventData);
-  const updateSettings = useEventStore(state => state.updateSettings);
-  
+  const eventData = useEventStore((state) => state.eventData);
+  const updateSettings = useEventStore((state) => state.updateSettings);
+
   // Queue management
-  const queue = useQueueStore(state => state.queue);
-  const moveItem = useQueueStore(state => state.moveItem);
-  const removeItem = useQueueStore(state => state.removeItem);
-  
+  const queue = useQueueStore((state) => state.queue);
+  const moveItem = useQueueStore((state) => state.moveItem);
+  const removeItem = useQueueStore((state) => state.removeItem);
+  const initQueueListener = useQueueStore((state) => state.initQueueListener);
+
   // Player management
-  const setCurrentSong = usePlayerStore(state => state.setCurrentSong);
-  
+  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+
   // Role check
-  const userRole = useRoleStore(state => state.userRole);
-  const isHost = userRole === 'host';
-  
-  // Settings from event data
+  const userRole = useRoleStore((state) => state.userRole);
+  const isHost = userRole === "host";
+
+  // Sync queue on event join
+  useEffect(() => {
+    if (eventData?.id) {
+      initQueueListener(eventData.id);
+    }
+  }, [eventData?.id, initQueueListener]);
+
+  // Settings
   const settings = eventData?.settings || {
     guestRequestsEnabled: true,
     voteSkipThreshold: 50,
     explicitFilter: true,
-    requestInterval: 25
+    requestInterval: 25,
   };
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'queue':
+      case "queue":
         return (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {queue.map((song, index) => (
               <div
-                key={song.id}
+                key={`${song.id}-${index}`}
                 className="flex items-center bg-white/5 p-2 rounded-lg group hover:bg-white/10 gap-2"
               >
-                <span className="text-white/60 w-5 text-center shrink-0">{index + 1}</span>
-                <div 
+                <span className="text-white/60 w-5 text-center shrink-0">
+                  {index + 1}
+                </span>
+                <div
                   className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
                   onClick={(e) => {
-                    if (e.target.closest('button')) return;
+                    if (e.target.closest("button")) return;
                     setCurrentSong(song);
                   }}
                 >
@@ -76,7 +86,7 @@ export default function SidePanel() {
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm truncate">{song.title}</p>
                     <p className="text-white/60 text-xs truncate">
-                      Added by {song.addedBy || 'Unknown'}
+                      Added by {song.addedBy || "Unknown"}
                     </p>
                   </div>
                 </div>
@@ -123,7 +133,7 @@ export default function SidePanel() {
           </div>
         );
 
-      case 'chat':
+      case "chat":
         return (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <div className="text-center text-white/60 py-8">
@@ -132,11 +142,11 @@ export default function SidePanel() {
           </div>
         );
 
-      case 'reactions':
+      case "reactions":
         return (
           <div className="flex-1 overflow-y-auto p-4">
             <div className="grid grid-cols-3 gap-4">
-              {['👍', '❤️', '🔥', '😂', '🎵', '🎉'].map((emoji) => (
+              {["👍", "❤️", "🔥", "😂", "🎵", "🎉"].map((emoji) => (
                 <button
                   key={emoji}
                   className="bg-white/5 p-4 rounded-lg text-center hover:bg-white/10 transition-colors"
@@ -148,7 +158,7 @@ export default function SidePanel() {
           </div>
         );
 
-      case 'bots':
+      case "bots":
         return (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {isHost ? (
@@ -185,68 +195,10 @@ export default function SidePanel() {
           </div>
         );
 
-      case 'settings':
+      case "settings":
         return isHost ? (
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             <div>
-              <label className="text-white font-medium block mb-2">
-                Guest Requests
-              </label>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  // type="checkbox"
-                  // checked={settings.guestRequestsEnabled}
-                  // onChange={(e) =>
-                  //   updateSettings({ guestRequestsEnabled: e.target.checked })
-                  // }
-                  // className="sr-only peer"
-                   type="checkbox"
-                  checked={settings.explicitFilter}
-                  onChange={(e) =>
-                    updateSettings({ explicitFilter: e.target.checked })
-                  }
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-white/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-              </label>
-            </div>
-
-            {/* <div>
-              <label className="text-white font-medium block mb-2">
-                Vote Skip Threshold (%)
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={settings.voteSkipThreshold}
-                onChange={(e) =>
-                  updateSettings({ voteSkipThreshold: parseInt(e.target.value) })
-                }
-                className="w-full accent-purple-600"
-              />
-              <span className="text-white/60 text-sm">
-                {settings.voteSkipThreshold}%
-              </span>
-            </div> */}
-
-            {/* <div>
-              <label className="text-white font-medium block mb-2">
-                Request Interval (minutes)
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={settings.requestInterval}
-                onChange={(e) =>
-                  updateSettings({ requestInterval: parseInt(e.target.value) })
-                }
-                className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-white"
-              />
-            </div> */}
-
-            {/* <div>
               <label className="text-white font-medium block mb-2">
                 Explicit Filter
               </label>
@@ -261,7 +213,7 @@ export default function SidePanel() {
                 />
                 <div className="w-11 h-6 bg-white/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
               </label>
-            </div> */}
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
@@ -283,8 +235,8 @@ export default function SidePanel() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'text-white bg-white/10'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
+                ? "text-white bg-white/10"
+                : "text-white/60 hover:text-white hover:bg-white/5"
             }`}
           >
             <tab.icon className="w-5 h-5" />

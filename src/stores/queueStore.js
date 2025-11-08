@@ -1,132 +1,138 @@
-import { create } from 'zustand';
-import { toast } from 'react-hot-toast';
+import { create } from "zustand";
+import { db } from "../firebase";
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  onSnapshot,
+  arrayUnion,
+  getDoc,
+} from "firebase/firestore";
 
 const useQueueStore = create((set, get) => ({
   queue: [],
-  voteSkips: {}, // { songId: [userId1, userId2, ...] }
-  lastRequestTime: {}, // { userId: timestamp }
+  roomId: null,
+  unsubscribe: null,
 
-  addToQueue: (video) => {
-    const state = get();
-    const now = Date.now();
-    const cooldownPeriod = 25 * 60 * 1000; // 25 minutes
+  /** 🎧 Initialize real-time listener for host or guest */
+  initQueueListener: async (roomId) => {
+    if (!roomId) return;
 
-    // 1️⃣ Prevent duplicates by ID
-    if (state.queue.some((s) => s.id === video.id)) {
-      toast.error('This song is already in the queue');
-      return false;
+    // Stop previous listener (if exists)
+    const existingUnsub = get().unsubscribe;
+    if (existingUnsub) existingUnsub();
+
+    const queueRef = doc(db, "queues", roomId);
+
+    // Ensure queue document exists
+    try {
+      const docSnap = await getDoc(queueRef);
+      if (!docSnap.exists()) {
+        await setDoc(queueRef, { songs: [] });
+      }
+    } catch (err) {
+      console.error("Error initializing queue document:", err);
+      return;
     }
 
-    // 2️⃣ Prevent duplicates by normalized title + artist (to avoid reuploads)
-    const normalize = (title) =>
-      title
-        .toLowerCase()
-        .replace(/[\(\)\[\]\-–_:|]/g, '')
-        .replace(/\b(hd|lyrics|letra|traducida|audio|video|cover)\b/g, '')
-        .trim();
+    // Real-time sync listener
+    const unsubscribe = onSnapshot(queueRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        set({ queue: data.songs || [] });
+      } else {
+        set({ queue: [] });
+      }
+    });
 
-    const signature = `${normalize(video.title)}|${video.artist?.toLowerCase() || ''}`;
-    if (state.queue.some((s) => {
-      const sSignature = `${normalize(s.title)}|${s.artist?.toLowerCase() || ''}`;
-      return sSignature === signature;
-    })) {
-      toast.error('A similar song is already in the queue');
-      return false;
+    set({ roomId, unsubscribe });
+  },
+
+  /** 🎵 Add a song to queue (reflects to both host & guests) */
+  addToQueue: async (song, addedBy = "guest") => {
+    const { roomId } = get();
+    if (!roomId) {
+      console.warn("⚠️ No roomId set for queue store.");
+      return;
     }
 
-    // 3️⃣ Check guest cooldown
-    if (video.userRole === 'guest') {
-      const lastRequest = state.lastRequestTime[video.addedBy] || 0;
-      if (now - lastRequest < cooldownPeriod) {
-        const remainingMinutes = Math.ceil((cooldownPeriod - (now - lastRequest)) / 60000);
-        toast.error(`Please wait ${remainingMinutes} minutes before requesting another song`);
-        return false;
+    const queueRef = doc(db, "queues", roomId);
+    const songObj = {
+      ...song,
+      addedBy,
+      timestamp: Date.now(),
+    };
+
+    try {
+      await updateDoc(queueRef, {
+        songs: arrayUnion(songObj),
+      });
+    } catch (err) {
+      console.error("Error adding song:", err);
+
+      // Handle missing doc (if deleted somehow)
+      if (err.code === "not-found") {
+        await setDoc(queueRef, { songs: [songObj] });
       }
     }
-
-    // 4️⃣ Add song
-    set((state) => ({
-      queue: [...state.queue, video],
-      lastRequestTime: { ...state.lastRequestTime, [video.addedBy]: now },
-    }));
-
-    toast.success('Song added to queue');
-    return true;
   },
 
-  removeSong: (songId, userRole, userId) => {
-    const song = get().queue.find((s) => s.id === songId);
-    if (!song) return false;
+  /** ❌ Remove song and sync with Firestore */
+  removeItem: async (index) => {
+    const { queue, roomId } = get();
+    if (!roomId) return;
 
-    if (userRole === 'host' || (userRole === 'subhost' && song.addedBy === userId)) {
-      set((state) => ({
-        queue: state.queue.filter((s) => s.id !== songId),
-        voteSkips: { ...state.voteSkips, [songId]: [] },
-      }));
-      toast.success('Song removed from queue');
-      return true;
+    const queueRef = doc(db, "queues", roomId);
+    const updatedQueue = [...queue];
+    updatedQueue.splice(index, 1);
+
+    try {
+      await updateDoc(queueRef, { songs: updatedQueue });
+      set({ queue: updatedQueue });
+    } catch (err) {
+      console.error("Error removing song:", err);
     }
-
-    toast.error("You don't have permission to remove this song");
-    return false;
   },
 
-  moveItem: (fromIndex, toIndex) => {
-    if (toIndex < 0) return;
-    set((state) => {
-      const newQueue = [...state.queue];
-      const [movedItem] = newQueue.splice(fromIndex, 1);
-      newQueue.splice(toIndex, 0, movedItem);
-      return { queue: newQueue };
-    });
-  },
+  /** 🔁 Move song up/down in queue */
+  moveItem: async (fromIndex, toIndex) => {
+    const { queue, roomId } = get();
+    if (!roomId) return;
+    if (toIndex < 0 || toIndex >= queue.length) return;
 
-  removeItem: (index) => {
-    set((state) => ({
-      queue: state.queue.filter((_, i) => i !== index),
-    }));
-  },
+    const updatedQueue = [...queue];
+    const [moved] = updatedQueue.splice(fromIndex, 1);
+    updatedQueue.splice(toIndex, 0, moved);
 
-  reorderQueue: (fromIndex, toIndex, userRole) => {
-    if (userRole !== 'host' && userRole !== 'subhost') {
-      toast.error('Only hosts and sub-hosts can reorder the queue');
-      return false;
+    const queueRef = doc(db, "queues", roomId);
+    try {
+      await updateDoc(queueRef, { songs: updatedQueue });
+      set({ queue: updatedQueue });
+    } catch (err) {
+      console.error("Error moving song:", err);
     }
-
-    set((state) => {
-      const newQueue = [...state.queue];
-      const [movedItem] = newQueue.splice(fromIndex, 1);
-      newQueue.splice(toIndex, 0, movedItem);
-      return { queue: newQueue };
-    });
-
-    return true;
   },
 
-  voteToSkip: (songId, userId, totalGuests, skipThreshold) => {
-    set((state) => {
-      const currentVotes = state.voteSkips[songId] || [];
-      if (currentVotes.includes(userId)) return state;
+  /** 🛑 Stop real-time listener */
+  stopListener: () => {
+    const unsub = get().unsubscribe;
+    if (unsub) unsub();
+    set({ unsubscribe: null, queue: [] });
+  },
 
-      const newVotes = [...currentVotes, userId];
-      const votePercentage = (newVotes.length / totalGuests) * 100;
+  /** 🧹 Clear queue (local + Firestore) */
+  clearQueue: async () => {
+    const { roomId } = get();
+    set({ queue: [] });
 
-      if (votePercentage >= skipThreshold) {
-        return {
-          queue: state.queue.filter((s) => s.id !== songId),
-          voteSkips: { ...state.voteSkips, [songId]: [] },
-        };
+    if (roomId) {
+      try {
+        const queueRef = doc(db, "queues", roomId);
+        await updateDoc(queueRef, { songs: [] });
+      } catch (err) {
+        console.warn("Error clearing queue in Firestore:", err);
       }
-
-      return { voteSkips: { ...state.voteSkips, [songId]: newVotes } };
-    });
-  },
-
-  clearQueue: () => set({ queue: [], voteSkips: {} }),
-
-  getVoteCount: (songId) => {
-    const votes = get().voteSkips[songId] || [];
-    return votes.length;
+    }
   },
 }));
 
