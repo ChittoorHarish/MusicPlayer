@@ -55,7 +55,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-x-hidden">
-      <div className="lg:pr-80 transition-all duration-300">
+      <div className="xl:pr-80 transition-all duration-300">
         <Toaster position="top-center" />
 
         {/* Header */}
@@ -85,37 +85,40 @@ function App() {
         </div>
 
         {/* Bottom Player */}
-        <div className="fixed bottom-0 inset-x-0 z-10 lg:right-80 pb-[env(safe-area-inset-bottom)]">
+        <div className="fixed bottom-0 inset-x-0 z-10 xl:right-80 pb-[env(safe-area-inset-bottom)]">
           <Player />
           <FloatingDock />
         </div>
       </div>
 
       {/* Desktop Side Panel */}
-      <div className="hidden lg:block">
+      <div className="hidden xl:block">
         <SidePanel />
       </div>
 
-      {/* ✅ Mobile Side Panel */}
-      <div className="lg:hidden fixed top-0 right-0 bottom-0 w-full max-w-[320px] transform translate-x-full transition-transform duration-300 z-50 mobile-side-panel bg-gray-900/95 backdrop-blur-lg">
-        <div className="sticky top-0 flex justify-between items-center p-4 border-b border-white/10 bg-gray-900/95 backdrop-blur-lg">
-          <h2 className="text-lg font-semibold text-white">Menu</h2>
-          <button
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-            onClick={() =>
-              document.querySelector(".mobile-side-panel")?.classList.add("translate-x-full")
-            }
-            aria-label="Close Menu"
-          >
-            <XMarkIcon className="w-6 h-6 text-white" />
-          </button>
-        </div>
-
-        <div className="overflow-y-auto h-[calc(100%-4rem)]">
+      {/* ✅ Mobile & Tablet Side Panel */}
+      <div className="xl:hidden fixed top-0 right-0 bottom-0 w-full max-w-[320px] transform translate-x-full transition-transform duration-300 z-[100] mobile-side-panel bg-gray-900/95 backdrop-blur-lg flex flex-col">
+        {/* Main content with overflow */}
+        <div className="flex-1 overflow-y-auto">
           <SidePanel isMobile={true} />
         </div>
 
-        <div className="h-[env(safe-area-inset-bottom)]" />
+        {/* Sticky bottom close button */}
+        <div className="sticky bottom-0 p-4 bg-gradient-to-t from-gray-900 via-gray-900/95 to-transparent">
+          <button
+            className="w-full py-3 px-6 bg-white/10 hover:bg-white/15 active:bg-white/20 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-white/20 flex items-center justify-center gap-2 backdrop-blur-sm"
+            onClick={() => {
+              const panel = document.querySelector(".mobile-side-panel");
+              panel?.classList.add("translate-x-full");
+            }}
+            aria-label="Close Menu"
+          >
+            <XMarkIcon className="w-5 h-5 text-white" />
+            <span className="text-white font-medium">Close</span>
+          </button>
+        </div>
+        
+        <div className="h-[env(safe-area-inset-bottom)] bg-gray-900" />
       </div>
     </div>
   );
