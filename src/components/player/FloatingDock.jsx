@@ -12,6 +12,56 @@ import usePlayerStore from '../../stores/playerStore';
 import { useRoleStore } from '../../stores/roleStore';
 import SettingsModal from '../modals/SettingsModal';
 
+// Add Safari-specific styles
+const SafariStyles = () => (
+  <style>
+    {`
+      /* Progress bar and range input styling for Safari */
+      @media not all and (min-resolution:.001dpcm) { 
+        @supports (-webkit-appearance:none) {
+          input[type='range'] {
+            -webkit-appearance: none;
+            background: transparent;
+          }
+          
+          input[type='range']::-webkit-slider-runnable-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            height: 4px;
+          }
+          
+          input[type='range']::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            background: rgb(6, 182, 212);
+            border: 2px solid rgb(6, 182, 212);
+            border-radius: 50%;
+            cursor: pointer;
+            height: 12px;
+            margin-top: -4px;
+            width: 12px;
+          }
+          
+          /* Volume slider specific styling */
+          input[type='range'].volume-slider::-webkit-slider-thumb {
+            background: rgb(6, 182, 212);
+            border-color: rgb(6, 182, 212);
+          }
+          
+          /* Settings button color */
+          .settings-button {
+            color: rgb(6, 182, 212);
+          }
+          
+          /* Progress bar color */
+          .progress-bar {
+            background: rgb(6, 182, 212);
+          }
+        }
+      }
+    `}
+  </style>
+);
+
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
@@ -85,8 +135,9 @@ export default function FloatingDock() {
 
   return (
     <>
-<div className="sticky bottom-0 z-50 bg-gradient-to-b from-black/80 to-black">
-   <div className="flex flex-col space-y-2 px-4 py-2 backdrop-blur-lg">
+      <SafariStyles />
+      <div className="sticky bottom-0 z-50 bg-gradient-to-b from-black/80 to-black">
+        <div className="flex flex-col space-y-2 px-4 py-2 backdrop-blur-lg">
 
           {/* Top: Track Info + Controls */}
           <div className="flex items-center justify-between">
@@ -135,8 +186,8 @@ export default function FloatingDock() {
             {/* Playback Controls */}
             <div className="flex items-center space-x-4">
               {canControl && (
-                <button onClick={handlePrevious} className="p-2 hover:bg-white/10 rounded-full" title="Previous">
-                  <BackwardIcon className="w-6 h-6 text-white/80" />
+                <button onClick={handlePrevious} className="p-2 hover:bg-white/10 rounded-full settings-button" title="Previous">
+                  <BackwardIcon className="w-6 h-6 text-cyan-500" />
                 </button>
               )}
 
@@ -173,7 +224,7 @@ export default function FloatingDock() {
                 max={duration || 0}
                 value={currentTime}
                 onChange={handleSeek}
-                className="flex-1 h-1 rounded-lg accent-cyan-500"
+                className="flex-1 h-1 rounded-lg accent-cyan-500 progress-bar"
               />
               <span className="text-xs text-white/60">{formatTime(duration)}</span>
             </div>
@@ -189,7 +240,7 @@ export default function FloatingDock() {
                 max="100"
                 value={volume}
                 onChange={(e) => setVolume(parseInt(e.target.value))}
-                className="w-24"
+                className="w-24 volume-slider"
               />
             </div>
 

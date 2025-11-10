@@ -24,3 +24,32 @@ body::before {
               radial-gradient(circle at 80% 80%, rgba(155,125,255,0.1), transparent 60%);
   z-index: -1;
 }
+/* Safari-friendly range styling */
+.safari-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background-color: #22d3ee; /* cyan-400 */
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.safari-range::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg, #06b6d4, #ec4899);
+  height: 4px;
+  border-radius: 2px;
+}
+
+.safari-range::-moz-range-track {
+  background: linear-gradient(90deg, #06b6d4, #ec4899);
+  height: 4px;
+  border-radius: 2px;
+}
+
+.safari-range::-moz-range-thumb {
+  background-color: #22d3ee;
+  border-radius: 50%;
+  cursor: pointer;
+}
+

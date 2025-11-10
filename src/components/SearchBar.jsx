@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { searchMusic } from '../services/youtube';
 import VideoPreviewModal from './modals/VideoPreviewModal';
-import { MusicalNoteIcon, PlusCircleIcon,VideoCameraIcon } from '@heroicons/react/24/solid';
+import { MusicalNoteIcon, VideoCameraIcon } from '@heroicons/react/24/solid';
+import { Switch } from '@headlessui/react';
 
 const SearchBar = ({ onResultSelect }) => {
   const [query, setQuery] = useState('');
@@ -12,6 +13,7 @@ const SearchBar = ({ onResultSelect }) => {
   const [prevPageTokens, setPrevPageTokens] = useState([]); // store history of page tokens
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isVideoMode, setIsVideoMode] = useState(false);
 
   const handleSearch = async (e, pageToken = '') => {
     if (e) e.preventDefault();
@@ -61,7 +63,7 @@ const SearchBar = ({ onResultSelect }) => {
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
             <form onSubmit={handleSearch} className="mb-4">
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <input
             type="text"
             value={query}
@@ -73,13 +75,32 @@ const SearchBar = ({ onResultSelect }) => {
           <button
             type="submit"
             disabled={loading}
-             className="px-6 py-2 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all duration-300 font-semibold text-white shadow-lg"
-            
+            className="px-6 py-2 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all duration-300 font-semibold text-white shadow-lg"
           >
             {loading ? 'Searching...' : 'Search'}
           </button>
+
+          {/* Video/Audio Toggle */}
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={isVideoMode}
+              onChange={setIsVideoMode}
+              className={`${
+                isVideoMode ? 'bg-purple-500' : 'bg-cyan-500'
+              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2`}
+            >
+              <span className="sr-only">{isVideoMode ? 'Switch to audio mode' : 'Switch to video mode'}</span>
+              <span
+                className={`${
+                  isVideoMode ? 'translate-x-6' : 'translate-x-1'
+                } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+              />
+            </Switch>
+            <span className="text-sm text-white/60">
+              {isVideoMode ? <VideoCameraIcon className="w-5 h-5" /> : <MusicalNoteIcon className="w-5 h-5" />}
+            </span>
+          </div>
         </div>
-        
       </form>
 
       {error && <div className="text-red-500 mb-4">{error}</div>}
@@ -90,34 +111,32 @@ const SearchBar = ({ onResultSelect }) => {
             key={video.id}
             className="relative flex gap-2 p-2 rounded-lg border border-gray-200 hover:border-blue-500 transition-colors group bg-white/5"
           >
-            <div className="relative">
+            <div 
+              className="relative cursor-pointer" 
+              onClick={() => {
+                // Add isVideo flag to the video object when adding to queue
+                const videoWithMode = {
+                  ...video,
+                  isVideo: isVideoMode
+                };
+                onResultSelect(videoWithMode);
+                if (isVideoMode) {
+                  setSelectedVideo(video);
+                  setIsPreviewOpen(true);
+                }
+              }}
+            >
               <img
                 src={video.thumbnail}
                 alt={video.title}
                 className="w-32 h-24 object-cover rounded"
               />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedVideo(video);
-                    setIsPreviewOpen(true);
-                  }}
-                  className="text-white hover:text-purple-400 transition-colors"
-                  title="Preview"
-                >
-                  <VideoCameraIcon className="w-8 h-8" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onResultSelect(video);
-                  }}
-                  className="text-white hover:text-blue-400 transition-colors"
-                  title="Add to queue"
-                >
-                  <MusicalNoteIcon className="w-8 h-8" />
-                </button>
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                {isVideoMode ? (
+                  <VideoCameraIcon className="w-8 h-8 text-white" />
+                ) : (
+                  <MusicalNoteIcon className="w-8 h-8 text-white" />
+                )}
               </div>
             </div>
             <div className="flex-1 min-w-0">

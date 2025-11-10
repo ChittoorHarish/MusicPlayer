@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import usePlayerStore from '../stores/playerStore';
 import useQueueStore from '../stores/queueStore';
 
-const YouTubePlayer = ({ videoId, onStateChange, onError }) => {
+const YouTubePlayer = ({ videoId, onStateChange, onError, isVideo = false }) => {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const frameRef = useRef(null);

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import YouTubePlayer from './YouTubePlayer';
+import VideoPreviewModal from './modals/VideoPreviewModal';
 import usePlayerStore from '../stores/playerStore';
 import useQueueStore from '../stores/queueStore';
 
 export default function Player() {
   const [currentVideoId, setCurrentVideoId] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const { 
     setIsPlaying, 
     currentSong, 
@@ -24,6 +26,9 @@ export default function Player() {
     if (currentSong) {
       console.log('Current song changed to:', currentSong.title);
       setCurrentVideoId(currentSong.id);
+      if (currentSong.isVideo) {
+        setIsPreviewOpen(true);
+      }
       setIsPlaying(true); // Ensure we're in playing state when song changes
     }
   }, [currentSong, setIsPlaying]);
@@ -72,14 +77,24 @@ export default function Player() {
   };
 
   return (
-    <div style={{ display: 'none' }}>
-      {currentVideoId && (
-        <YouTubePlayer
+    <>
+      <div style={{ display: 'none' }}>
+        {currentVideoId && (
+          <YouTubePlayer
+            videoId={currentVideoId}
+            onStateChange={handleStateChange}
+            onError={handleError}
+            isVideo={currentSong?.isVideo}
+          />
+        )}
+      </div>
+      {currentSong?.isVideo && isPreviewOpen && (
+        <VideoPreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
           videoId={currentVideoId}
-          onStateChange={handleStateChange}
-          onError={handleError}
         />
       )}
-    </div>
+    </>
   );
 }
