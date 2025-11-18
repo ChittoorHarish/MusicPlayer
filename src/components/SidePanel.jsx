@@ -1,6 +1,6 @@
 // src/components/SidePanel.jsx
 import React, { useEffect } from "react";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import {
   ChatBubbleLeftIcon,
   QueueListIcon,
@@ -11,10 +11,12 @@ import {
   ArrowDownIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+
 import useEventStore from "../stores/eventStore";
 import useQueueStore from "../stores/queueStore";
 import { useRoleStore } from "../stores/roleStore";
 import usePlayerStore from "../stores/playerStore";
+import useReactionStore from "../stores/reactionStore";
 
 const tabs = [
   { id: "queue", icon: QueueListIcon, label: "Queue" },
@@ -39,9 +41,23 @@ export default function SidePanel() {
 
   // Player management
   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const currentSong = usePlayerStore((state) => state.currentSong);
+
+  // Reaction management (fixed)
+  const currentSongReactions = useReactionStore(
+    (state) => state.currentSongReactions || {}
+  );
+  const addReaction = useReactionStore((state) => state.addReaction);
+  const initReactionsListener = useReactionStore(
+    (state) => state.initReactionsListener
+  );
+  const clearCurrentReactions = useReactionStore(
+    (state) => state.clearCurrentReactions
+  );
 
   // Role check
   const userRole = useRoleStore((state) => state.userRole);
+  const userId = useRoleStore((state) => state.userId);
   const isHost = userRole === "host";
 
   // Sync queue on event join
@@ -50,6 +66,20 @@ export default function SidePanel() {
       initQueueListener(eventData.id);
     }
   }, [eventData?.id, initQueueListener]);
+
+  // Sync reactions when song changes
+  useEffect(() => {
+    if (eventData?.id && currentSong?.id) {
+      clearCurrentReactions();
+      const unsubscribe = initReactionsListener(eventData.id, currentSong.id);
+      return () => unsubscribe && unsubscribe();
+    }
+  }, [
+    eventData?.id,
+    currentSong?.id,
+    initReactionsListener,
+    clearCurrentReactions,
+  ]);
 
   // Settings
   const settings = eventData?.settings || {
@@ -76,20 +106,19 @@ export default function SidePanel() {
                   className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
                   onClick={(e) => {
                     if (e.target.closest("button")) return;
-                    
-                    // Only host and subhost can play songs from queue
-                    if (userRole === 'guest' || !userRole) {
-                      toast('🎵 Your song will be played by the host soon!', {
-                        icon: '⏳',
+
+                    if (!userRole || userRole === "guest") {
+                      toast("🎵 Your song will be played by the host soon!", {
+                        icon: "⏳",
                         style: {
-                          borderRadius: '10px',
-                          background: '#333',
-                          color: '#fff',
+                          borderRadius: "10px",
+                          background: "#333",
+                          color: "#fff",
                         },
                       });
                       return;
                     }
-                    
+
                     setCurrentSong(song);
                   }}
                 >
@@ -158,18 +187,64 @@ export default function SidePanel() {
         );
 
       case "reactions":
+        const handleReactionClick = async (emoji) => {
+          if (!currentSong) {
+            toast.error("No song is currently playing!");
+            return;
+          }
+
+          await addReaction(eventData.id, currentSong.id, emoji, userId);
+          toast.success(`${emoji} reaction added!`, {
+            duration: 1000,
+            style: {
+              borderRadius: "10px",
+              background: "#333",
+              color: "#fff",
+            },
+          });
+        };
+
         return (
           <div className="flex-1 overflow-y-auto p-4">
+            {currentSong && (
+              <div className="mb-4 p-3 bg-white/5 rounded-lg">
+                <p className="text-white/60 text-sm mb-1">Reacting to:</p>
+                <p className="text-white font-medium text-sm truncate">
+                  {currentSong.title}
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-4">
-              {["👍", "❤️", "🔥", "😂", "🎵", "🎉"].map((emoji) => (
-                <button
-                  key={emoji}
-                  className="bg-white/5 p-4 rounded-lg text-center hover:bg-white/10 transition-colors"
-                >
-                  <span className="text-4xl">{emoji}</span>
-                </button>
-              ))}
+              {["👍", "❤️", "🔥", "😂", "🎵", "🎉"].map((emoji) => {
+                const reactionData = currentSongReactions?.[emoji] || {
+                  count: 0,
+                  users: [],
+                };
+                const count = reactionData.count || 0;
+                const hasReacted = reactionData.users?.includes(userId);
+
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => handleReactionClick(emoji)}
+                    disabled={hasReacted}
+                    className={`bg-white/5 p-4 rounded-lg text-center transition-all transform ${
+                      hasReacted
+                        ? "bg-cyan-500/20 border-2 border-cyan-500 cursor-not-allowed"
+                        : "hover:bg-white/10 hover:scale-105"
+                    }`}
+                  >
+                    <span className="text-4xl block mb-2">{emoji}</span>
+                    <span className="text-white text-sm font-medium">{count}</span>
+                  </button>
+                );
+              })}
             </div>
+            {!currentSong && (
+              <p className="text-white/60 text-center mt-8">
+                Play a song to start reacting!
+              </p>
+            )}
           </div>
         );
 

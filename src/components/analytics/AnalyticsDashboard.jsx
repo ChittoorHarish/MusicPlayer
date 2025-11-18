@@ -11,7 +11,10 @@ import {
   Legend,
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
+
 import ParticipantsList from '../ParticipantsList';
+import useReactionStore from '../../stores/reactionStore';
+import usePlayerStore from '../../stores/playerStore';
 
 ChartJS.register(
   CategoryScale,
@@ -27,15 +30,16 @@ ChartJS.register(
 export default function AnalyticsDashboard({ eventId }) {
   const containerRef = React.useRef(null);
 
-  // Add padding to the bottom when floating dock appears
+  const currentSongReactions = useReactionStore(state => state.currentSongReactions);
+  const currentSong = usePlayerStore(state => state.currentSong);
+
+  // Add bottom padding for floating dock
   React.useEffect(() => {
-    const adjustPadding = () => {
-      if (containerRef.current) {
-        containerRef.current.style.paddingBottom = '100px';
-      }
-    };
-    adjustPadding();
+    if (containerRef.current) {
+      containerRef.current.style.paddingBottom = '100px';
+    }
   }, []);
+
   const [stats, setStats] = React.useState({
     playCount: [],
     skipCount: [],
@@ -44,8 +48,22 @@ export default function AnalyticsDashboard({ eventId }) {
     guestEngagement: { active: 0, passive: 0 },
   });
 
+  // Live reactions from store
+  const liveReactions = React.useMemo(() => {
+    const emojis = ['👍', '❤️', '🔥', '😂', '🎵', '🎉'];
+
+    if (!currentSongReactions) {
+      return emojis.map(emoji => ({ name: emoji, count: 0 }));
+    }
+
+    return emojis.map(emoji => ({
+      name: emoji,
+      count: currentSongReactions[emoji]?.count || 0,
+    }));
+  }, [currentSongReactions]);
+
+  // Mocked analytics until Firebase implementation
   React.useEffect(() => {
-    // TODO: Implement real-time analytics using Firebase
     const mockData = {
       playCount: Array.from({ length: 24 }, () => Math.floor(Math.random() * 100)),
       skipCount: Array.from({ length: 24 }, () => Math.floor(Math.random() * 20)),
@@ -77,134 +95,89 @@ export default function AnalyticsDashboard({ eventId }) {
   };
 
   const reactionData = {
-    labels: stats.reactions.map(r => r.name),
+    labels: liveReactions.map(r => r.name),
     datasets: [
       {
         label: 'Reactions',
-        data: stats.reactions.map(r => r.count),
+        data: liveReactions.map(r => r.count),
         backgroundColor: [
           'rgba(0, 216, 198, 0.8)',
           'rgba(155, 125, 255, 0.8)',
           'rgba(255, 125, 155, 0.8)',
           'rgba(125, 255, 155, 0.8)',
           'rgba(255, 155, 125, 0.8)',
+          'rgba(255, 215, 0, 0.8)',
         ],
       },
     ],
   };
 
   return (
-    <div ref={containerRef} className="space-y-6 p-4 pb-32 overflow-y-auto max-h-screen">
+    <div
+      ref={containerRef}
+      className="space-y-6 p-4 pb-32 overflow-y-auto max-h-screen"
+    >
       <h2 className="text-2xl font-bold text-white mb-6">Event Analytics</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-0">
-        {/* Play Count Graph */}
-      {/*  <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
-          <h3 className="text-lg font-medium text-white mb-4">Play Activity</h3>
-          <Line
-            data={playCountData}
-            options={{
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  grid: {
-                    color: 'rgba(255, 255, 255, 0.1)',
-                  },
-                  ticks: { color: 'rgba(255, 255, 255, 0.6)' },
-                },
-                x: {
-                  grid: {
-                    color: 'rgba(255, 255, 255, 0.1)',
-                  },
-                  ticks: { color: 'rgba(255, 255, 255, 0.6)' },
-                },
-              },
-              plugins: {
-                legend: {
-                  labels: { color: 'rgba(255, 255, 255, 0.8)' },
-                },
-              },
-            }}
-          />
-        </div>*/}
 
         {/* Reactions Chart */}
         <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
-          <h3 className="text-lg font-medium text-white mb-4">Reactions</h3>
-           <div className="text-white/60 py-8">
-              Reactions feature coming soon
+          <h3 className="text-lg font-medium text-white mb-4">
+            Reactions{' '}
+            {currentSong && (
+              <span className="text-sm text-white/60">
+                for "{currentSong.title}"
+              </span>
+            )}
+          </h3>
+
+          {liveReactions.some(r => r.count > 0) ? (
+            <Bar
+              data={reactionData}
+              options={{
+                responsive: true,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: 'rgba(255, 255, 255, 0.6)', stepSize: 1 },
+                  },
+                  x: {
+                    grid: { display: false },
+                    ticks: {
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      font: { size: 20 },
+                    },
+                  },
+                },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return `${context.parsed.y} reaction${
+                          context.parsed.y !== 1 ? 's' : ''
+                        }`;
+                      },
+                    },
+                  },
+                },
+              }}
+            />
+          ) : (
+            <div className="text-white/60 py-8 text-center">
+              {currentSong
+                ? 'No reactions yet. Be the first to react!'
+                : 'Play a song to see reactions'}
             </div>
-         {/* <Bar
-            data={reactionData}
-            options={{
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  grid: {
-                    color: 'rgba(255, 255, 255, 0.1)',
-                  },
-                  ticks: { color: 'rgba(255, 255, 255, 0.6)' },
-                },
-                x: {
-                  grid: {
-                    display: false,
-                  },
-                  ticks: { color: 'rgba(255, 255, 255, 0.6)' },
-                },
-              },
-              plugins: {
-                legend: {
-                  display: false,
-                },
-              },
-            }}
-          />*/}
+          )}
         </div>
 
         {/* Guest Engagement */}
-      <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4 max-h-64 overflow-y-auto scrollbar-hide">
-  <ParticipantsList />
-</div>
-
-
-        {/* Top Stats */}
-      {/*  <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
-          <h3 className="text-lg font-medium text-white mb-4">Quick Stats</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-white/60">Total Plays</p>
-              <p className="text-2xl font-bold text-cyan-500">
-                {stats.playCount.reduce((a, b) => a + b, 0)}
-              </p>
-            </div>
-            <div>
-              <p className="text-white/60">Skip Rate</p>
-              <p className="text-2xl font-bold text-purple-500">
-                {Math.round(
-                  (stats.skipCount.reduce((a, b) => a + b, 0) /
-                    stats.playCount.reduce((a, b) => a + b, 0)) *
-                    100
-                )}%
-              </p>
-            </div>
-            <div>
-              <p className="text-white/60">Total Reactions</p>
-              <p className="text-2xl font-bold text-cyan-500">
-                {stats.reactions.reduce((a, b) => a + b.count, 0)}
-              </p>
-            </div>
-            <div>
-              <p className="text-white/60">Messages/Hour</p>
-              <p className="text-2xl font-bold text-purple-500">
-                {Math.round(
-                  stats.chatActivity.reduce((a, b) => a + b, 0) / stats.chatActivity.length
-                )}
-              </p>
-            </div>
-          </div>
-        </div> */}
+        <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4 max-h-64 overflow-y-auto scrollbar-hide">
+          <ParticipantsList />
+        </div>
       </div>
     </div>
   );
