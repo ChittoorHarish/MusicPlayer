@@ -17,6 +17,7 @@ import useQueueStore from "../stores/queueStore";
 import { useRoleStore } from "../stores/roleStore";
 import usePlayerStore from "../stores/playerStore";
 import useReactionStore from "../stores/reactionStore";
+import Chat from "./Chat";
 
 const tabs = [
   { id: "queue", icon: QueueListIcon, label: "Queue" },
@@ -179,10 +180,8 @@ export default function SidePanel() {
 
       case "chat":
         return (
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <div className="text-center text-white/60 py-8">
-              Chat feature coming soon
-            </div>
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <Chat />
           </div>
         );
 

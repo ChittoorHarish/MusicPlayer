@@ -1,39 +1,56 @@
 import { create } from 'zustand';
+import { db } from '../firebase';
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+} from 'firebase/firestore';
 
-const useChatStore = create((set) => ({
+const useChatStore = create((set, get) => ({
   messages: [],
-  reactions: {}, // { songId: { '👍': [userId1, userId2], '❤️': [userId3] } }
   
-  addMessage: (message) => set(state => ({
-    messages: [...state.messages, { ...message, timestamp: Date.now() }]
-  })),
+  /**
+   * Initialize real-time listener for chat messages
+   */
+  initChatListener: (eventId) => {
+    const messagesRef = collection(db, 'events', eventId, 'messages');
+    const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+    return onSnapshot(q, (snapshot) => {
+      const messages = [];
+      snapshot.forEach((doc) => {
+        messages.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+      set({ messages });
+    });
+  },
   
-  addReaction: (songId, reaction, userId) => set(state => {
-    const songReactions = state.reactions[songId] || {};
-    const reactionUsers = songReactions[reaction] || [];
-    
-    // Toggle reaction
-    const newReactionUsers = reactionUsers.includes(userId)
-      ? reactionUsers.filter(id => id !== userId)
-      : [...reactionUsers, userId];
-    
-    return {
-      reactions: {
-        ...state.reactions,
-        [songId]: {
-          ...songReactions,
-          [reaction]: newReactionUsers
-        }
-      }
-    };
-  }),
+  /**
+   * Send a new message to Firebase
+   */
+  sendMessage: async (eventId, messageData) => {
+    try {
+      const messagesRef = collection(db, 'events', eventId, 'messages');
+      await addDoc(messagesRef, {
+        ...messageData,
+        timestamp: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  },
   
+  /**
+   * Clear local messages (e.g., when leaving event)
+   */
   clearChat: () => set({ messages: [] }),
-  
-  getReactionCount: (songId, reaction) => {
-    const state = useChatStore.getState();
-    return (state.reactions[songId]?.[reaction] || []).length;
-  }
 }));
 
 export default useChatStore;
