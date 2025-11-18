@@ -16,47 +16,113 @@ import SettingsModal from '../modals/SettingsModal';
 const SafariStyles = () => (
   <style>
     {`
-      /* Progress bar and range input styling for Safari */
-      @media not all and (min-resolution:.001dpcm) { 
-        @supports (-webkit-appearance:none) {
-          input[type='range'] {
-            -webkit-appearance: none;
-            background: transparent;
-          }
-          
-          input[type='range']::-webkit-slider-runnable-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 9999px;
-            height: 4px;
-          }
-          
-          input[type='range']::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            background: rgb(6, 182, 212);
-            border: 2px solid rgb(6, 182, 212);
-            border-radius: 50%;
-            cursor: pointer;
-            height: 12px;
-            margin-top: -4px;
-            width: 12px;
-          }
-          
-          /* Volume slider specific styling */
-          input[type='range'].volume-slider::-webkit-slider-thumb {
-            background: rgb(6, 182, 212);
-            border-color: rgb(6, 182, 212);
-          }
-          
-          /* Settings button color */
-          .settings-button {
-            color: rgb(6, 182, 212);
-          }
-          
-          /* Progress bar color */
-          .progress-bar {
-            background: rgb(6, 182, 212);
-          }
-        }
+      /* Range input styling for all browsers including Safari */
+      input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+        width: 100%;
+      }
+      
+      /* Chrome, Safari, Edge */
+      input[type='range']::-webkit-slider-runnable-track {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 9999px;
+        height: 4px;
+      }
+      
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        background: rgb(6, 182, 212);
+        border: 2px solid rgb(6, 182, 212);
+        border-radius: 50%;
+        cursor: pointer;
+        height: 14px;
+        width: 14px;
+        margin-top: -5px;
+        box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+      }
+      
+      /* Firefox */
+      input[type='range']::-moz-range-track {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 9999px;
+        height: 4px;
+      }
+      
+      input[type='range']::-moz-range-thumb {
+        background: rgb(6, 182, 212);
+        border: 2px solid rgb(6, 182, 212);
+        border-radius: 50%;
+        cursor: pointer;
+        height: 14px;
+        width: 14px;
+        box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+      }
+      
+      /* Volume slider specific styling */
+      input[type='range'].volume-slider {
+        height: 4px;
+      }
+      
+      input[type='range'].volume-slider::-webkit-slider-runnable-track {
+        background: linear-gradient(
+          to right,
+          rgb(6, 182, 212) 0%,
+          rgb(6, 182, 212) var(--volume, 0%),
+          rgba(255, 255, 255, 0.2) var(--volume, 0%),
+          rgba(255, 255, 255, 0.2) 100%
+        );
+        height: 4px;
+      }
+      
+      input[type='range'].volume-slider::-webkit-slider-thumb {
+        background: rgb(6, 182, 212);
+        border-color: rgb(6, 182, 212);
+        height: 14px;
+        width: 14px;
+        margin-top: -5px;
+      }
+      
+      input[type='range'].volume-slider::-moz-range-track {
+        background: linear-gradient(
+          to right,
+          rgb(6, 182, 212) 0%,
+          rgb(6, 182, 212) var(--volume, 0%),
+          rgba(255, 255, 255, 0.2) var(--volume, 0%),
+          rgba(255, 255, 255, 0.2) 100%
+        );
+        height: 4px;
+      }
+      
+      input[type='range'].volume-slider::-moz-range-thumb {
+        background: rgb(6, 182, 212);
+        border-color: rgb(6, 182, 212);
+        height: 14px;
+        width: 14px;
+      }
+      
+      /* Progress bar specific styling */
+      input[type='range'].progress-bar::-webkit-slider-runnable-track {
+        background: linear-gradient(
+          to right,
+          rgb(6, 182, 212) 0%,
+          rgb(6, 182, 212) var(--progress, 0%),
+          rgba(255, 255, 255, 0.2) var(--progress, 0%),
+          rgba(255, 255, 255, 0.2) 100%
+        );
+      }
+      
+      input[type='range'].progress-bar::-moz-range-track {
+        background: linear-gradient(
+          to right,
+          rgb(6, 182, 212) 0%,
+          rgb(6, 182, 212) var(--progress, 0%),
+          rgba(255, 255, 255, 0.2) var(--progress, 0%),
+          rgba(255, 255, 255, 0.2) 100%
+        );
       }
     `}
   </style>
@@ -228,6 +294,9 @@ export default function FloatingDock() {
                 value={currentTime}
                 onChange={handleSeek}
                 className="flex-1 h-1 rounded-lg accent-cyan-500 progress-bar"
+                style={{
+                  '--progress': `${duration > 0 ? (currentTime / duration) * 100 : 0}%`
+                }}
               />
               <span className="text-xs text-white/60">{formatTime(duration)}</span>
             </div>
@@ -244,6 +313,9 @@ export default function FloatingDock() {
                 value={volume}
                 onChange={(e) => setVolume(parseInt(e.target.value))}
                 className="w-24 volume-slider"
+                style={{
+                  '--volume': `${volume}%`
+                }}
               />
             </div>
 
