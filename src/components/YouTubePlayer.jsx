@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import usePlayerStore from '../stores/playerStore';
 import useQueueStore from '../stores/queueStore';
+import { useRoleStore } from '../stores/roleStore';
 
 const YouTubePlayer = ({ videoId, onStateChange, onError, isVideo = false }) => {
   const containerRef = useRef(null);
@@ -19,6 +20,8 @@ const YouTubePlayer = ({ videoId, onStateChange, onError, isVideo = false }) => 
     setIsPlaying,
     setCurrentSong,
   } = usePlayerStore();
+  
+  const userRole = useRoleStore(state => state.userRole);
 
   const queue = useQueueStore(state => state.queue);
 
@@ -62,7 +65,7 @@ const YouTubePlayer = ({ videoId, onStateChange, onError, isVideo = false }) => 
         width: '0',
         videoId,
         playerVars: {
-          autoplay: 1,
+          autoplay: 0,
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -85,7 +88,14 @@ const YouTubePlayer = ({ videoId, onStateChange, onError, isVideo = false }) => 
               const dur = event.target.getDuration?.();
               if (dur) setDurationRef.current(dur);
 
-              event.target.playVideo();
+              // Only auto-play if isPlaying is true in the store
+              const currentIsPlaying = usePlayerStore.getState().isPlaying;
+              if (currentIsPlaying) {
+                event.target.playVideo();
+              } else {
+                // Cue the video but don't play it
+                event.target.cueVideoById(videoId);
+              }
             } catch (err) {
               console.warn('Error initializing player:', err);
             }
@@ -197,9 +207,25 @@ const YouTubePlayer = ({ videoId, onStateChange, onError, isVideo = false }) => 
   // Load new video when videoId changes
   useEffect(() => {
     if (isPlayerReadyRef.current && videoId) {
-      safePlayerCall('loadVideoById', videoId);
+      const currentIsPlaying = usePlayerStore.getState().isPlaying;
+      if (currentIsPlaying) {
+        safePlayerCall('loadVideoById', videoId);
+      } else {
+        safePlayerCall('cueVideoById', videoId);
+      }
     }
   }, [videoId]);
+  
+  // Handle play/pause state changes
+  useEffect(() => {
+    if (isPlayerReadyRef.current) {
+      if (isPlaying) {
+        safePlayerCall('playVideo');
+      } else {
+        safePlayerCall('pauseVideo');
+      }
+    }
+  }, [isPlaying]);
 
   return <div ref={containerRef} />;
 };

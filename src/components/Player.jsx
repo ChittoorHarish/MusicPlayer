@@ -3,6 +3,7 @@ import YouTubePlayer from './YouTubePlayer';
 import VideoPreviewModal from './modals/VideoPreviewModal';
 import usePlayerStore from '../stores/playerStore';
 import useQueueStore from '../stores/queueStore';
+import { useRoleStore } from '../stores/roleStore';
 
 export default function Player() {
   const [currentVideoId, setCurrentVideoId] = useState(null);
@@ -13,6 +14,7 @@ export default function Player() {
     setCurrentSong,
   } = usePlayerStore();
   const queue = useQueueStore(state => state.queue);
+  const userRole = useRoleStore(state => state.userRole);
   
   // Start playing first song in queue if none is playing
   useEffect(() => {
@@ -29,9 +31,12 @@ export default function Player() {
       if (currentSong.isVideo) {
         setIsPreviewOpen(true);
       }
-      setIsPlaying(true); // Ensure we're in playing state when song changes
+      // Only auto-play for host, guests respect synced state
+      if (userRole === 'host') {
+        setIsPlaying(true); // Ensure we're in playing state when song changes
+      }
     }
-  }, [currentSong, setIsPlaying]);
+  }, [currentSong, setIsPlaying, userRole]);
 
   const handleStateChange = (event) => {
     const state = event.data;

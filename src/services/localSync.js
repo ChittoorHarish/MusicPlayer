@@ -11,6 +11,29 @@ const setupLocalSync = () => {
 
   // Setup storage event listener for guests
   if (userRole !== 'host') {
+    // First, immediately sync with current state when joining
+    const initialState = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (initialState) {
+      try {
+        const remoteState = JSON.parse(initialState);
+        if (remoteState && remoteState.eventId === eventData?.id) {
+          // Calculate time adjustment for sync
+          const timeSinceUpdate = (Date.now() - remoteState.timestamp) / 1000;
+          const adjustedTime = remoteState.currentTime + (remoteState.isPlaying ? timeSinceUpdate : 0);
+
+          // Update store state immediately on join
+          usePlayerStore.setState({
+            currentSong: remoteState.currentSong,
+            isPlaying: remoteState.isPlaying,
+            currentTime: adjustedTime
+          });
+        }
+      } catch (error) {
+        console.error('Error syncing initial state:', error);
+      }
+    }
+
+    // Then setup listener for future changes
     window.addEventListener('storage', (e) => {
       if (e.key === LOCAL_STORAGE_KEY) {
         const remoteState = JSON.parse(e.newValue);
@@ -33,16 +56,25 @@ const setupLocalSync = () => {
         // Sync YouTube player with time compensation
         if (player) {
           if (remoteState.currentSong?.id !== playerStore.currentSong?.id) {
-            // If it's a different song, load it with adjusted time
-            player.loadVideoById({
-              videoId: remoteState.currentSong.id,
-              startSeconds: adjustedTime
-            });
+            // If it's a different song, load or cue based on isPlaying state
+            if (remoteState.isPlaying) {
+              player.loadVideoById({
+                videoId: remoteState.currentSong.id,
+                startSeconds: adjustedTime
+              });
+            } else {
+              player.cueVideoById({
+                videoId: remoteState.currentSong.id,
+                startSeconds: adjustedTime
+              });
+            }
           } else if (remoteState.isPlaying) {
             // If same song, just seek and play
             player.seekTo(adjustedTime);
             player.playVideo();
           } else {
+            // Same song but paused
+            player.seekTo(adjustedTime);
             player.pauseVideo();
           }
         }

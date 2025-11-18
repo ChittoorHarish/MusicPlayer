@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrashIcon, ArrowUpIcon, ArrowDownIcon, PlayIcon } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 import useQueueStore from '../stores/queueStore';
 import usePlayerStore from '../stores/playerStore';
 import { useRoleStore } from '../stores/roleStore';
@@ -25,8 +26,24 @@ export default function QueueManager() {
   };
 
   const handlePlay = (song) => {
-    // Allow any user to play songs from the queue
-    setCurrentSong(song);
+    console.log('handlePlay called, userRole:', userRole);
+    
+    // Only host and subhost can play songs from queue
+    if (userRole === 'guest' || (!userRole)) {
+      toast('🎵 Your song will be played by the host soon!', {
+        icon: '⏳',
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+        },
+      });
+      return;
+    }
+    
+    if (userRole === 'host' || userRole === 'subhost') {
+      setCurrentSong(song);
+    }
   };
 
   const handleVoteSkip = (songId) => {

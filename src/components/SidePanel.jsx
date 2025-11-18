@@ -1,5 +1,6 @@
 // src/components/SidePanel.jsx
 import React, { useEffect } from "react";
+import toast from 'react-hot-toast';
 import {
   ChatBubbleLeftIcon,
   QueueListIcon,
@@ -75,6 +76,20 @@ export default function SidePanel() {
                   className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
                   onClick={(e) => {
                     if (e.target.closest("button")) return;
+                    
+                    // Only host and subhost can play songs from queue
+                    if (userRole === 'guest' || !userRole) {
+                      toast('🎵 Your song will be played by the host soon!', {
+                        icon: '⏳',
+                        style: {
+                          borderRadius: '10px',
+                          background: '#333',
+                          color: '#fff',
+                        },
+                      });
+                      return;
+                    }
+                    
                     setCurrentSong(song);
                   }}
                 >
