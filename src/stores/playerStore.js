@@ -201,12 +201,13 @@ const usePlayerStore = create((set, get) => ({
   },
 
   previousSong: () => {
-    const { currentSong } = get();
+    const { currentSong, setCurrentSong } = get();
     const queue = useQueueStore.getState().queue;
     if (currentSong && queue.length > 0) {
       const currentIndex = queue.findIndex((song) => song.id === currentSong.id);
       if (currentIndex > 0) {
-        set({ currentSong: queue[currentIndex - 1] });
+        setCurrentSong(queue[currentIndex - 1]);
+        set({ isPlaying: true });
         return true;
       }
     }

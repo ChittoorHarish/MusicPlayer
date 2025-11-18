@@ -31,9 +31,9 @@ export default function Player() {
       if (currentSong.isVideo) {
         setIsPreviewOpen(true);
       }
-      // Only auto-play for host, guests respect synced state
-      if (userRole === 'host') {
-        setIsPlaying(true); // Ensure we're in playing state when song changes
+      // Auto-play for host when song changes
+      if (userRole === 'host' || userRole === 'subhost') {
+        setIsPlaying(true);
       }
     }
   }, [currentSong, setIsPlaying, userRole]);

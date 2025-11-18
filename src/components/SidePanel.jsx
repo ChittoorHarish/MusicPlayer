@@ -43,6 +43,7 @@ export default function SidePanel() {
   // Player management
   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
   const currentSong = usePlayerStore((state) => state.currentSong);
+  const setIsPlaying = usePlayerStore((state) => state.setIsPlaying);
 
   // Reaction management (fixed)
   const currentSongReactions = useReactionStore(
@@ -121,6 +122,7 @@ export default function SidePanel() {
                     }
 
                     setCurrentSong(song);
+                    setIsPlaying(true);
                   }}
                 >
                   <img

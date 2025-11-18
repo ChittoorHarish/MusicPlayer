@@ -208,8 +208,14 @@ const YouTubePlayer = ({ videoId, onStateChange, onError, isVideo = false }) => 
   useEffect(() => {
     if (isPlayerReadyRef.current && videoId) {
       const currentIsPlaying = usePlayerStore.getState().isPlaying;
+      console.log('Loading new video:', videoId, 'isPlaying:', currentIsPlaying);
+      
       if (currentIsPlaying) {
         safePlayerCall('loadVideoById', videoId);
+        // Ensure playback starts
+        setTimeout(() => {
+          safePlayerCall('playVideo');
+        }, 100);
       } else {
         safePlayerCall('cueVideoById', videoId);
       }
