@@ -119,16 +119,16 @@ export default function AnalyticsDashboard({ eventId }) {
     >
       <h2 className="text-2xl font-bold text-white mb-6">Event Analytics</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-0">
 
         {/* Reactions Chart */}
         <div className="bg-black/20 backdrop-blur-xl rounded-xl p-4">
           <h3 className="text-lg font-medium text-white mb-4">
             Reactions{' '}
-            {currentSong && (
-              <span className="text-sm text-white/60">
-                for "{currentSong.title}"
-              </span>
+           {currentSong && (
+  <span className="text-sm text-white/60 whitespace-nowrap truncate max-w-[150px] inline-block align-middle">
+    for "{currentSong.title}"
+  </span>
             )}
           </h3>
 
