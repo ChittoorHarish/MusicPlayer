@@ -11,11 +11,43 @@ export default function CreateOrJoinEvent() {
   const [eventCode, setEventCode] = useState('');
   const [userName, setUserName] = useState('');
   const setEventData = useEventStore(state => state.setEventData);
-  const { setRole } = useRoleStore(); // ✅ Use role store
+  const { setRole } = useRoleStore();
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [tempEventData, setTempEventData] = useState(null);
   const [tempUserId, setTempUserId] = useState(null);
+
+  /** ------------------------------
+   *  COPY TO CLIPBOARD (FULL MOBILE SUPPORT)
+   * ------------------------------ */
+  const copyToClipboard = async (text) => {
+    // Modern API (Desktop, Secure Contexts)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.warn("Clipboard API failed, falling back...", err);
+      }
+    }
+
+    // Fallback for iOS Safari + Android WebView
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      return true;
+    } catch (err) {
+      console.error("Copy fallback failed", err);
+      return false;
+    }
+  };
 
   /** ------------------------------
    *  CREATE EVENT
@@ -86,7 +118,6 @@ export default function CreateOrJoinEvent() {
 
       setEventData({ ...eventData, participants: updatedParticipants });
 
-      // ✅ Store role and userId in global store
       setRole('guest', userId);
 
       toast.success(`Joined ${eventData.title}`);
@@ -97,7 +128,7 @@ export default function CreateOrJoinEvent() {
   };
 
   /** ------------------------------
-   *  LUXURIOUS VISUAL ANIMATIONS
+   *  ANIMATION (unchanged)
    * ------------------------------ */
   const [particles, setParticles] = useState([]);
   useEffect(() => {
@@ -335,22 +366,25 @@ export default function CreateOrJoinEvent() {
                   {generatedCode}
                 </p>
               </div>
+
               <div className="flex justify-end space-x-3">
+                {/* UPDATED COPY BUTTON WITH FALLBACK SUPPORT */}
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(generatedCode);
-                    toast.success('Code copied!');
+                  onClick={async () => {
+                    const ok = await copyToClipboard(generatedCode);
+                    if (ok) toast.success('Code copied!');
+                    else toast.error('Failed to copy code');
                   }}
                   className="px-6 py-2 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all duration-300 font-semibold text-white shadow-lg"
                 >
                   Copy Code
                 </button>
+
                 <button
                   onClick={async () => {
                     try {
                       await setDoc(doc(db, 'events', tempEventData.id), tempEventData);
                       setEventData(tempEventData);
-                      // ✅ store role + userId globally
                       setRole('host', tempUserId);
                       setShowCodeModal(false);
                       toast.success('Event created successfully!');
@@ -364,9 +398,11 @@ export default function CreateOrJoinEvent() {
                   Continue
                 </button>
               </div>
+
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

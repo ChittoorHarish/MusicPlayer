@@ -206,13 +206,11 @@ export default function FloatingDock() {
         <div className="flex flex-col space-y-2 px-4 py-2 backdrop-blur-lg">
 
           {/* Top: Track Info + Controls */}
-          {/* <div className="flex items-center justify-between"> */}
-          <div className="flex items-center justify-between flex-wrap gap-3 min-w-0">
+          <div className="flex items-center justify-between gap-2 min-w-0">
             {currentSong ? (
-              // <div className="flex items-center space-x-4 max-w-[300px]">
-              <div className="flex items-center space-x-3 min-w-0 max-w-[55vw] sm:max-w-[300px]">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden shadow-lg border border-white/10">
+              <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1 overflow-hidden">
+                <div className="relative flex-shrink-0">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-lg border border-white/10">
                     <img
                       src={currentSong.thumbnail}
                       alt={currentSong.title}
@@ -220,7 +218,7 @@ export default function FloatingDock() {
                     />
                   </div>
                   {!canControl && currentSong && (
-                    <div className="absolute -top-2 -right-2">
+                    <div className="absolute -top-2 -right-2 hidden md:block">
                       {isPlaying ? (
                         <div className="flex items-center gap-1.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xs px-3 py-1 rounded-full shadow-lg border border-white/20">
                           <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
@@ -235,12 +233,12 @@ export default function FloatingDock() {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col gap-1 truncate">
-                  <span className="text-white font-medium text-base truncate">{currentSong.title}</span>
+                <div className="flex flex-col gap-0.5 md:gap-1 truncate min-w-0 flex-1">
+                  <span className="text-white font-medium text-sm md:text-base truncate">{currentSong.title}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-white/70 text-sm truncate font-medium">{currentSong.artist}</span>
+                    <span className="text-white/70 text-xs md:text-sm truncate font-medium">{currentSong.artist}</span>
                     {!canControl && currentSong && (
-                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-indigo-300 border border-indigo-500/30 font-medium whitespace-nowrap">
+                      <span className="hidden md:inline text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-indigo-300 border border-indigo-500/30 font-medium whitespace-nowrap">
                         {isPlaying ? 'Live with host' : 'Synced with host'}
                       </span>
                     )}
@@ -252,32 +250,31 @@ export default function FloatingDock() {
             )}
 
             {/* Playback Controls */}
-            {/* <div className="flex items-center space-x-4"> */}
-            <div className="flex items-center space-x-4 flex-shrink-0">
+            <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
               {canControl && (
-                <button onClick={handlePrevious} className="p-2 hover:bg-white/10 rounded-full settings-button" title="Previous">
-                  <BackwardIcon className="w-6 h-6 text-cyan-500" />
+                <button onClick={handlePrevious} className="p-1.5 md:p-2 hover:bg-white/10 rounded-full settings-button" title="Previous">
+                  <BackwardIcon className="w-5 h-5 md:w-6 md:h-6 text-cyan-500" />
                 </button>
               )}
 
               <button
                 onClick={handlePlayPause}
-                className={`p-3 rounded-full transition-colors ${
+                className={`p-2 md:p-3 rounded-full transition-colors ${
                   canControl ? 'bg-cyan-500/20 hover:bg-cyan-500/30' : 'bg-gray-500/20'
                 }`}
                 disabled={!canControl}
                 title={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
-                  <PauseIcon className={`w-8 h-8 ${canControl ? 'text-cyan-500' : 'text-gray-500'}`} />
+                  <PauseIcon className={`w-6 h-6 md:w-8 md:h-8 ${canControl ? 'text-cyan-500' : 'text-gray-500'}`} />
                 ) : (
-                  <PlayIcon className={`w-8 h-8 ${canControl ? 'text-cyan-500' : 'text-gray-500'}`} />
+                  <PlayIcon className={`w-6 h-6 md:w-8 md:h-8 ${canControl ? 'text-cyan-500' : 'text-gray-500'}`} />
                 )}
               </button>
 
               {canControl && (
-                <button onClick={handleSkip} className="p-2 hover:bg-white/10 rounded-full" title="Skip">
-                  <ForwardIcon className="w-6 h-6 text-cyan-500"  />
+                <button onClick={handleSkip} className="p-1.5 md:p-2 hover:bg-white/10 rounded-full" title="Skip">
+                  <ForwardIcon className="w-5 h-5 md:w-6 md:h-6 text-cyan-500"  />
                 </button>
               )}
             </div>
