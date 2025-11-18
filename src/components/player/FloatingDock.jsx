@@ -140,9 +140,11 @@ export default function FloatingDock() {
         <div className="flex flex-col space-y-2 px-4 py-2 backdrop-blur-lg">
 
           {/* Top: Track Info + Controls */}
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between"> */}
+          <div className="flex items-center justify-between flex-wrap gap-3 min-w-0">
             {currentSong ? (
-              <div className="flex items-center space-x-4 max-w-[300px]">
+              // <div className="flex items-center space-x-4 max-w-[300px]">
+              <div className="flex items-center space-x-3 min-w-0 max-w-[55vw] sm:max-w-[300px]">
                 <div className="relative">
                   <div className="w-16 h-16 rounded-lg overflow-hidden shadow-lg border border-white/10">
                     <img
@@ -184,7 +186,8 @@ export default function FloatingDock() {
             )}
 
             {/* Playback Controls */}
-            <div className="flex items-center space-x-4">
+            {/* <div className="flex items-center space-x-4"> */}
+            <div className="flex items-center space-x-4 flex-shrink-0">
               {canControl && (
                 <button onClick={handlePrevious} className="p-2 hover:bg-white/10 rounded-full settings-button" title="Previous">
                   <BackwardIcon className="w-6 h-6 text-cyan-500" />
@@ -208,7 +211,7 @@ export default function FloatingDock() {
 
               {canControl && (
                 <button onClick={handleSkip} className="p-2 hover:bg-white/10 rounded-full" title="Skip">
-                  <ForwardIcon className="w-6 h-6 text-white/80" />
+                  <ForwardIcon className="w-6 h-6 text-cyan-500"  />
                 </button>
               )}
             </div>
