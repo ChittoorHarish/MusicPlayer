@@ -78,8 +78,49 @@ The DJ Effects feature has been successfully integrated into the Music Player wi
 
 ## 🚧 Next Steps
 
-### 1. Add Real Sound Files
-The current sound files are empty placeholders. Replace them with actual DJ sound effects:
+### 1. Testing EQ/Filter Effects
+
+**Current Status**: EQ and filters work on **DJ sound effects only**.
+
+**Test it**:
+1. Open DJ Panel
+2. Boost Bass to +12dB
+3. Click Airhorn button
+4. You'll hear a bassier sound
+5. Set filter to Lowpass at 500Hz
+6. Click Airhorn again - muffled sound
+
+**Why YouTube audio isn't affected**: YouTube's iframe API doesn't expose raw audio due to CORS (Cross-Origin Resource Sharing) security restrictions. This is a browser security feature that prevents accessing audio/video streams from different domains.
+
+### 2. Options for Full Audio Processing
+
+**Current Implementation**: Synthetic DJ sounds via Web Audio API
+- ✅ Works immediately
+- ✅ Fully customizable
+- ✅ EQ/filters work on these sounds
+- ✅ No file downloads needed
+
+**Option A: Keep Current Setup (Recommended)**
+- Focus on DJ sound effects as the main feature
+- Add more sound types (kick, snare, cymbal, laser, siren, etc.)
+- Let users adjust sound parameters
+- Create beat patterns/loops
+
+**Option B: Visual-Only EQ for YouTube**
+- Display EQ as visual feedback
+- Adjust YouTube player volume based on EQ settings
+- Limited but provides some functionality
+- Good for aesthetic purposes
+
+**Option C: Switch to Local Audio Files**
+- Upload MP3/WAV files instead of YouTube
+- Full Web Audio API control
+- EQ/filters work perfectly
+- Different app concept (local DJ mixer vs YouTube player)
+
+### 3. Expanding DJ Sounds (Easy Wins)
+
+Instead of MP3 files, add more synthetic sounds:
 
 ```bash
 # Download from:

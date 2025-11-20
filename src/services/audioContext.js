@@ -67,6 +67,17 @@ const createAudioNodes = (ctx) => {
     analyser.fftSize = 256;
     analyser.smoothingTimeConstant = 0.8;
     
+    // Pre-connect the effect chain: bassEQ → midEQ → trebleEQ → filter → gain → analyser → destination
+    // This allows sounds to be routed through the chain at any time
+    bassEQ.connect(midEQ);
+    midEQ.connect(trebleEQ);
+    trebleEQ.connect(filterNode);
+    filterNode.connect(gainNode);
+    gainNode.connect(analyser);
+    analyser.connect(ctx.destination);
+    
+    console.log('DJ effect chain pre-connected and ready');
+    
     return {
       bassEQ,
       midEQ,
@@ -102,14 +113,8 @@ export const connectAudioSource = (source) => {
     
     sourceNode = source;
     
-    // Connect the audio chain: source → bass → mid → treble → filter → gain → analyser → destination
+    // Connect source to the start of the pre-connected effect chain
     source.connect(audioNodes.bassEQ);
-    audioNodes.bassEQ.connect(audioNodes.midEQ);
-    audioNodes.midEQ.connect(audioNodes.trebleEQ);
-    audioNodes.trebleEQ.connect(audioNodes.filterNode);
-    audioNodes.filterNode.connect(audioNodes.gainNode);
-    audioNodes.gainNode.connect(audioNodes.analyser);
-    audioNodes.analyser.connect(audioContext.destination);
     
     console.log('Audio source connected through DJ effect chain');
     return true;
@@ -169,24 +174,112 @@ export const updateFilter = (settings) => {
 };
 
 /**
+ * Generate synthetic sound effect (fallback when MP3 files are missing)
+ */
+const generateSyntheticSound = (type, ctx) => {
+  const sampleRate = ctx.sampleRate;
+  let duration, frequency, decay;
+  
+  switch (type) {
+    case 'airhorn':
+      duration = 1.0;
+      frequency = 400;
+      decay = 0.3;
+      break;
+    case 'scratch':
+      duration = 0.5;
+      frequency = 100;
+      decay = 0.1;
+      break;
+    case 'drop':
+      duration = 0.8;
+      frequency = 60;
+      decay = 0.5;
+      break;
+    default:
+      duration = 0.5;
+      frequency = 440;
+      decay = 0.3;
+  }
+  
+  const length = sampleRate * duration;
+  const buffer = ctx.createBuffer(1, length, sampleRate);
+  const data = buffer.getChannelData(0);
+  
+  for (let i = 0; i < length; i++) {
+    const t = i / sampleRate;
+    let value = 0;
+    
+    if (type === 'airhorn') {
+      // Aggressive horn sound with harmonics
+      value = Math.sin(2 * Math.PI * frequency * t) * 0.6 +
+              Math.sin(2 * Math.PI * frequency * 1.5 * t) * 0.3 +
+              Math.sin(2 * Math.PI * frequency * 2 * t) * 0.1;
+      value *= Math.exp(-decay * t);
+    } else if (type === 'scratch') {
+      // Scratchy noise with rapid frequency change
+      const freqMod = frequency + (Math.random() * 200 - 100);
+      value = (Math.random() * 2 - 1) * 0.5 + Math.sin(2 * Math.PI * freqMod * t) * 0.5;
+      value *= Math.exp(-decay * t * 10);
+    } else if (type === 'drop') {
+      // Bass drop with frequency sweep
+      const sweepFreq = frequency + (200 * Math.exp(-t * 5));
+      value = Math.sin(2 * Math.PI * sweepFreq * t) * 0.8;
+      value *= Math.max(0, 1 - t / duration);
+    }
+    
+    data[i] = value;
+  }
+  
+  return buffer;
+};
+
+/**
  * Play DJ sound effect
  */
-export const playDJSound = async (soundUrl) => {
+export const playDJSound = async (soundUrl, effectType = 'airhorn') => {
   try {
+    console.log(`🎵 playDJSound called with: ${effectType}`);
+    
     if (!audioContext) {
-      console.warn('Audio context not initialized');
-      return;
+      // Initialize if not already
+      console.log('Initializing audio context...');
+      const result = initializeAudioContext();
+      if (!result) {
+        console.error('Failed to initialize audio context');
+        return;
+      }
     }
+    
+    console.log('Audio context state:', audioContext.state);
     
     // Resume context if needed
     if (audioContext.state === 'suspended') {
+      console.log('Resuming suspended audio context...');
       await audioContext.resume();
+      console.log('Audio context resumed, new state:', audioContext.state);
     }
     
-    // Fetch and decode audio
-    const response = await fetch(soundUrl);
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    let audioBuffer;
+    
+    try {
+      // Try to fetch and decode audio file
+      const response = await fetch(soundUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Check if file is empty (< 100 bytes likely empty)
+      if (arrayBuffer.byteLength < 100) {
+        throw new Error('Audio file is empty');
+      }
+      
+      audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    } catch (error) {
+      console.log(`MP3 file not available, generating synthetic ${effectType} sound`);
+      // Generate synthetic sound as fallback
+      audioBuffer = generateSyntheticSound(effectType, audioContext);
+    }
+    
+    console.log('Audio buffer created, duration:', audioBuffer.duration);
     
     // Create buffer source
     const soundSource = audioContext.createBufferSource();
@@ -196,16 +289,27 @@ export const playDJSound = async (soundUrl) => {
     const soundGain = audioContext.createGain();
     soundGain.gain.value = 0.7; // 70% volume for effects
     
-    // Connect: soundSource → soundGain → destination
-    soundSource.connect(soundGain);
-    soundGain.connect(audioContext.destination);
+    // Connect through EQ chain if available, otherwise direct to destination
+    if (audioNodes && audioNodes.bassEQ) {
+      // Route through DJ effects: soundSource → soundGain → bassEQ → (rest of chain) → destination
+      soundSource.connect(soundGain);
+      soundGain.connect(audioNodes.bassEQ);
+      // The rest of the chain is already connected: bassEQ → midEQ → trebleEQ → filter → gain → analyser → destination
+      console.log('✅ DJ sound routed through EQ/filter chain');
+    } else {
+      // Direct connection if effects not initialized
+      soundSource.connect(soundGain);
+      soundGain.connect(audioContext.destination);
+      console.log('✅ DJ sound playing without effects (chain not initialized)');
+    }
     
     // Play sound
     soundSource.start(0);
     
-    console.log('Playing DJ sound effect');
+    console.log(`✅ Playing DJ sound effect: ${effectType}`);
   } catch (error) {
-    console.error('Error playing DJ sound:', error);
+    console.error('❌ Error playing DJ sound:', error);
+    throw error;
   }
 };
 

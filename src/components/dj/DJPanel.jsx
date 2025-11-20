@@ -61,16 +61,17 @@ export default function DJPanel() {
   const handleDJSound = async (soundType) => {
     try {
       const soundUrl = `/sounds/${soundType}.mp3`;
-      await playDJSound(soundUrl);
+      await playDJSound(soundUrl, soundType);
+      toast.success(`${soundType.charAt(0).toUpperCase() + soundType.slice(1)} sound played`);
     } catch (error) {
       console.error('Error playing DJ sound:', error);
-      toast.error('Sound effect not available');
+      toast.error('Sound effect error');
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-gray-900 via-purple-900/20 to-black border border-cyan-500/30 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-gradient-to-br from-gray-900 via-purple-900/20 to-black border border-cyan-500/30 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-purple-900/80 to-cyan-900/80 backdrop-blur-lg p-4 border-b border-cyan-500/30 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -91,6 +92,8 @@ export default function DJPanel() {
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Info Banner */}
+
           {/* 3-Band Equalizer */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
