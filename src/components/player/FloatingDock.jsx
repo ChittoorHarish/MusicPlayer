@@ -5,12 +5,14 @@ import {
   ForwardIcon,
   BackwardIcon,
   SpeakerWaveIcon,
-  ArrowPathIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/solid';
+import { AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 import usePlayerStore from '../../stores/playerStore';
 import { useRoleStore } from '../../stores/roleStore';
+import useDJStore from '../../stores/djStore';
 import SettingsModal from '../modals/SettingsModal';
+import DJPanel from '../dj/DJPanel';
 
 // Add Safari-specific styles
 const SafariStyles = () => (
@@ -136,24 +138,23 @@ function formatTime(seconds) {
 
 export default function FloatingDock() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const {
     isPlaying,
     currentSong,
     volume,
-    crossfadeEnabled,
     currentTime,
     duration,
     playerInstance,
     setVolume,
-    setCrossfadeEnabled,
     setCurrentTime,
     setDuration,
     playPause,
     skipSong,
     previousSong,
   } = usePlayerStore();
+
+  const { isDJModeEnabled, togglePanel } = useDJStore();
 
   const userRole = useRoleStore(state => state.userRole) || '';
   const canControl = userRole === 'host' || userRole === 'subhost';
@@ -329,6 +330,16 @@ export default function FloatingDock() {
                 </button> */}
 
                 <button
+                  onClick={togglePanel}
+                  className={`p-2 rounded-full transition-colors ${
+                    isDJModeEnabled ? 'bg-purple-500/20 text-purple-500' : 'text-white/60 hover:bg-white/10'
+                  }`}
+                  title="DJ Mode"
+                >
+                  <AdjustmentsHorizontalIcon className="w-5 h-5" />
+                </button>
+
+                <button
                   onClick={() => setIsSettingsOpen(true)}
                   className="p-2 text-white/60 hover:bg-white/10 rounded-full transition-colors"
                   title="Settings"
@@ -343,6 +354,7 @@ export default function FloatingDock() {
 
       {/* Modals */}
       {isSettingsOpen && <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />}
+      <DJPanel />
     </>
   );
 }
