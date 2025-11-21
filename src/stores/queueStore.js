@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { db } from "../firebase";
 import {
   doc,
@@ -10,11 +11,13 @@ import {
 } from "firebase/firestore";
 import { useRoleStore } from "./roleStore";
 
-const useQueueStore = create((set, get) => ({
-  queue: [],
-  localQueue: [], // For local files only (not synced to Firebase)
-  roomId: null,
-  unsubscribe: null,
+const useQueueStore = create(
+  persist(
+    (set, get) => ({
+      queue: [],
+      localQueue: [], // For local files only (not synced to Firebase)
+      roomId: null,
+      unsubscribe: null,
 
   /** 🔹 Initialize Firestore listener for the queue */
   initQueueListener: async (roomId) => {
@@ -36,7 +39,13 @@ const useQueueStore = create((set, get) => ({
     const unsubscribe = onSnapshot(queueRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        set({ queue: data.songs || [] });
+        const firebaseQueue = data.songs || [];
+        
+        // Merge Firebase queue with local queue
+        const currentLocalQueue = get().localQueue;
+        const mergedQueue = [...firebaseQueue, ...currentLocalQueue];
+        
+        set({ queue: mergedQueue });
       }
     });
 
@@ -54,10 +63,15 @@ const useQueueStore = create((set, get) => ({
       };
       delete localSong.file; // Remove File object
       
-      set((state) => ({
-        localQueue: [...state.localQueue, localSong],
-        queue: [...state.queue, localSong] // Add to combined queue for display
-      }));
+      set((state) => {
+        const newLocalQueue = [...state.localQueue, localSong];
+        // Rebuild merged queue: Firebase queue + local queue
+        const firebaseQueue = state.queue.filter(s => s.source !== 'local');
+        return {
+          localQueue: newLocalQueue,
+          queue: [...firebaseQueue, ...newLocalQueue]
+        };
+      });
       return;
     }
 
@@ -134,6 +148,14 @@ const useQueueStore = create((set, get) => ({
   clearQueue: () => {
     set({ queue: [], localQueue: [] });
   },
-}));
+}),
+    {
+      name: 'queue-storage', // localStorage key
+      partialize: (state) => ({
+        localQueue: state.localQueue, // Only persist local queue
+      }),
+    }
+  )
+);
 
 export default useQueueStore;

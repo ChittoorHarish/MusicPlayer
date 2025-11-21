@@ -144,18 +144,104 @@ const effectPresets = [
   }
 ];
 
-const useAudioEffectsStore = create((set) => ({
+const useAudioEffectsStore = create((set, get) => ({
   effectPresets,
-  activePreset: 'original',
+  activePreset: 'original', // Keep for backward compatibility
+  activeEffects: [], // Array of active effect IDs that can be mixed
   
   setActivePreset: (presetId) => set({ activePreset: presetId }),
+  
+  // Toggle an effect on/off
+  toggleEffect: (effectId) => {
+    const currentEffects = get().activeEffects;
+    
+    // If "original" is clicked, clear all effects
+    if (effectId === 'original') {
+      set({ activeEffects: [], activePreset: 'original' });
+      return;
+    }
+    
+    // Toggle the effect
+    if (currentEffects.includes(effectId)) {
+      // Remove effect if already active
+      set({ 
+        activeEffects: currentEffects.filter(id => id !== effectId),
+        activePreset: currentEffects.filter(id => id !== effectId).length > 0 ? 'mixed' : 'original'
+      });
+    } else {
+      // Add effect
+      set({ 
+        activeEffects: [...currentEffects, effectId],
+        activePreset: 'mixed'
+      });
+    }
+  },
+  
+  // Check if an effect is currently active
+  isEffectActive: (effectId) => {
+    const state = get();
+    if (effectId === 'original') {
+      return state.activeEffects.length === 0;
+    }
+    return state.activeEffects.includes(effectId);
+  },
   
   getPresetById: (presetId) => {
     return effectPresets.find(preset => preset.id === presetId) || effectPresets[0];
   },
   
+  // Get combined effects from all active presets
+  getCombinedEffects: () => {
+    const state = get();
+    
+    // If no effects active, return original
+    if (state.activeEffects.length === 0) {
+      return effectPresets[0]; // Original
+    }
+    
+    // Combine all active effects
+    const combined = {
+      id: 'mixed',
+      name: 'Mixed',
+      icon: '🎛️',
+      bass: 0,
+      mid: 0,
+      treble: 0,
+      reverb: 0,
+      echo: 0,
+      pitch: 0,
+      speed: 1.0,
+      bitcrush: 0,
+      distortion: 0
+    };
+    
+    // Add effects from each active preset
+    state.activeEffects.forEach(effectId => {
+      const preset = effectPresets.find(p => p.id === effectId);
+      if (preset) {
+        combined.bass += preset.bass;
+        combined.mid += preset.mid;
+        combined.treble += preset.treble;
+        combined.reverb = Math.min(1, combined.reverb + preset.reverb); // Cap at 1
+        combined.echo = Math.min(1, combined.echo + preset.echo);
+        combined.pitch += preset.pitch;
+        combined.speed *= preset.speed; // Multiply speeds
+        combined.bitcrush = Math.min(1, combined.bitcrush + preset.bitcrush);
+        combined.distortion = Math.min(1, combined.distortion + preset.distortion);
+      }
+    });
+    
+    // Clamp values to reasonable ranges
+    combined.bass = Math.max(-15, Math.min(15, combined.bass));
+    combined.mid = Math.max(-15, Math.min(15, combined.mid));
+    combined.treble = Math.max(-15, Math.min(15, combined.treble));
+    combined.speed = Math.max(0.5, Math.min(2.0, combined.speed));
+    
+    return combined;
+  },
+  
   getActivePresetEffects: () => {
-    const state = useAudioEffectsStore.getState();
+    const state = get();
     return state.getPresetById(state.activePreset);
   }
 }));

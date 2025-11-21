@@ -30,7 +30,14 @@ export default function Player() {
       console.log('🎵 Player: Current song changed to:', currentSong.title);
       console.log('🎵 Player: Song source:', currentSong.source);
       console.log('🎵 Player: File URL:', currentSong.fileUrl);
-      setCurrentVideoId(currentSong.id);
+      
+      // Only set videoId for YouTube songs, not local files
+      if (currentSong.source === 'local') {
+        setCurrentVideoId(null); // Clear video ID for local files
+      } else {
+        setCurrentVideoId(currentSong.id);
+      }
+      
       if (currentSong.isVideo) {
         setIsPreviewOpen(true);
       }
@@ -43,8 +50,11 @@ export default function Player() {
   }, [currentSong, setIsPlaying, userRole]);
 
   const handleStateChange = (event) => {
+    // Handle both YouTube events and local audio events
+    if (!event || event.data === undefined) return;
+    
     const state = event.data;
-    console.log('YouTube state changed:', state);
+    console.log('Player state changed:', state, 'Source:', currentSong?.source);
     
     // YouTube states: -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (cued)
     if (state === 1) {
@@ -74,13 +84,23 @@ export default function Player() {
   };
 
   const handleError = (error) => {
-    console.error('YouTube Player Error:', error);
-    // Skip to next song on error
-    if (queue.length > 0) {
-      const currentIndex = queue.findIndex(song => song.id === currentSong?.id);
-      const nextSong = queue[currentIndex + 1];
-      if (nextSong) {
+    console.error('Player Error:', error, 'Source:', currentSong?.source);
+    
+    // Don't skip if it's a local file error - let local player handle it
+    if (currentSong?.source === 'local') {
+      console.log('Local audio error, not auto-skipping');
+      return;
+    }
+    
+    // For YouTube errors, skip to next song
+    console.log('YouTube error, attempting to skip to next song');
+    if (queue.length > 0 && currentSong) {
+      const currentIndex = queue.findIndex(song => song.id === currentSong.id);
+      if (currentIndex !== -1 && currentIndex < queue.length - 1) {
+        const nextSong = queue[currentIndex + 1];
+        console.log('Skipping to next song:', nextSong.title);
         setCurrentSong(nextSong);
+        setIsPlaying(true);
       }
     }
   };
@@ -94,19 +114,19 @@ export default function Player() {
 
   return (
     <>
-      {/* Local Audio Player - Visible for debugging and effects UI */}
-      {currentVideoId && currentSong?.source === 'local' && (
+      {/* Local Audio Player - Only render when source is local */}
+      {currentSong?.source === 'local' && currentSong?.fileUrl && (
         <div className="w-full my-4 px-4">
           <LocalAudioPlayer
             fileUrl={currentSong.fileUrl}
-            trackId={currentVideoId}
+            trackId={currentSong.id}
             onStateChange={handleStateChange}
             onError={handleError}
           />
         </div>
       )}
       
-      {/* YouTube Player - Hidden */}
+      {/* YouTube Player - Only render when source is NOT local and videoId exists */}
       {currentVideoId && currentSong?.source !== 'local' && (
         <div className="hidden">
           <YouTubePlayer

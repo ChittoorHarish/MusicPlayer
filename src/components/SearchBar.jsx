@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { searchMusic } from '../services/youtube';
-import FileUploadSearch from './FileUploadSearch';
 import VideoPreviewModal from './modals/VideoPreviewModal';
-import { MusicalNoteIcon, VideoCameraIcon } from '@heroicons/react/24/solid';
+import { MusicalNoteIcon, VideoCameraIcon, CloudArrowUpIcon } from '@heroicons/react/24/solid';
 import { Switch } from '@headlessui/react';
 
 const SearchBar = ({ onResultSelect }) => {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,7 +16,6 @@ const SearchBar = ({ onResultSelect }) => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isVideoMode, setIsVideoMode] = useState(false);
-  const [musicSource, setMusicSource] = useState('youtube'); // 'youtube' or 'local'
 
   const handleSearch = async (e, pageToken = '') => {
     if (e) e.preventDefault();
@@ -68,38 +68,19 @@ const SearchBar = ({ onResultSelect }) => {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
-      {/* Source Toggle */}
-      <div className="mb-4 flex items-center justify-center gap-3 p-2 bg-white/5 rounded-lg border border-white/10">
+      {/* Upload Files Button */}
+      <div className="mb-4 flex justify-end">
         <button
-          type="button"
-          onClick={() => setMusicSource('youtube')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-            musicSource === 'youtube'
-              ? 'bg-red-500 text-white shadow-lg'
-              : 'text-white/60 hover:text-white'
-          }`}
+          onClick={() => navigate('/local-music')}
+          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-lg transition-all duration-300 font-semibold text-white shadow-lg flex items-center gap-2"
         >
-          🎬 YouTube
-        </button>
-        <button
-          type="button"
-          onClick={() => setMusicSource('local')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-            musicSource === 'local'
-              ? 'bg-green-500 text-white shadow-lg'
-              : 'text-white/60 hover:text-white'
-          }`}
-        >
-          📁 Local Files (All Effects Work!)
+          <CloudArrowUpIcon className="w-5 h-5" />
+          <span>Upload Local Files • All Effects</span>
         </button>
       </div>
 
-      {/* Show FileUploadSearch or YouTube search based on source */}
-      {musicSource === 'local' ? (
-        <FileUploadSearch onResultSelect={onResultSelect} />
-      ) : (
-        <>
-          <form onSubmit={handleSearch} className="mb-4">
+      {/* YouTube Search */}
+      <form onSubmit={handleSearch} className="mb-4">
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -216,8 +197,6 @@ const SearchBar = ({ onResultSelect }) => {
           setSelectedVideo(null);
         }}
       />
-      </>
-      )}
     </div>
   );
 };

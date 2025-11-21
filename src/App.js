@@ -1,4 +1,5 @@
 import React from "react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { initializeStores } from "./utils/storeUtils";
@@ -9,7 +10,6 @@ import Player from "./components/Player";
 import RotatingDeck from "./components/RotatingDeck";
 import DiscoWaveOrb from "./components/DiscoWaveOrb";
 import SearchBar from "./components/SearchBar";
-import AudioEffectsBar from "./components/AudioEffectsBar";
 import FloatingDock from "./components/player/FloatingDock";
 import AnalyticsDashboard from "./components/analytics/AnalyticsDashboard";
 import useEventStore from "./stores/eventStore";
@@ -18,9 +18,12 @@ import { useRoleStore } from "./stores/roleStore";
 import usePlayerStore from "./stores/playerStore";
 import CreateOrJoinEvent from "./components/CreateOrJoinEvent";
 import SidePanel from "./components/SidePanel";
+import LocalMusicPage from "./pages/LocalMusicPage";
 import "./App.css";
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const eventData = useEventStore((state) => state.eventData);
   const addToQueue = useQueueStore((state) => state.addToQueue);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
@@ -28,19 +31,32 @@ function App() {
   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
   const setIsPlaying = usePlayerStore((state) => state.setIsPlaying);
   const { role, userId } = useRoleStore();
+  const [eventJustCreated, setEventJustCreated] = React.useState(false);
 
   React.useEffect(() => {
     if (!eventData) {
       initializeStores();
+      setEventJustCreated(false);
     } else {
       const updateLocalState = setupLocalSync();
       usePlayerStore.setState({ updateLocalState });
       const unsubscribeParticipants = setupParticipantSync(eventData.id);
+      
+      // Mark that event was just created (only on first mount with eventData)
+      setEventJustCreated(true);
+      
       return () => unsubscribeParticipants && unsubscribeParticipants();
     }
   }, [eventData]);
 
-  if (!eventData) return <CreateOrJoinEvent />;
+  // Redirect to main page ONLY when event is first created (not on navigation)
+  React.useEffect(() => {
+    if (eventData && eventJustCreated && location.pathname === '/local-music') {
+      // Event was just created and we're on local-music page, redirect to main
+      navigate('/', { replace: true });
+      setEventJustCreated(false); // Reset flag after redirect
+    }
+  }, [eventData, eventJustCreated, location.pathname, navigate]);
 
   const handleVideoSelect = (video) => {
     const addedBy = role === "host" ? "host" : "guest";
@@ -62,43 +78,57 @@ function App() {
     }
   };
 
+  // If no event, show create/join screen
+  if (!eventData) {
+    return <CreateOrJoinEvent />;
+  }
+
+  // Main app with routing
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-x-hidden">
-      <div className="xl:pr-80 transition-all duration-300">
-        <Toaster position="top-center" />
+    <>
+      {/* Global Player - Persists across all routes */}
+      <Player />
 
-        {/* Header */}
-        <div className="sticky top-0 z-20 bg-gradient-to-b from-gray-900 to-black">
-          <EventHeader />
-          <AudioEffectsBar />
-        </div>
+      <Routes>
+        {/* Local Music Page Route */}
+        <Route path="/local-music" element={<LocalMusicPage />} />
+        
+        {/* Main Page Route */}
+        <Route path="*" element={
+          <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-x-hidden">
+            <div className="xl:pr-80 transition-all duration-300">
+              <Toaster position="top-center" />
 
-        {/* Main Layout */}
-        <div className="container mx-auto px-4 py-4 md:p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-            <div className="lg:col-span-2 space-y-4 md:space-y-6 order-2 lg:order-1">
-              <SearchBar onResultSelect={handleVideoSelect} />
-              <AnalyticsDashboard eventId={eventData?.id} />
-            </div>
+              {/* Header */}
+              <div className="sticky top-0 z-20 bg-gradient-to-b from-gray-900 to-black">
+                <EventHeader />
+              </div>
 
-            <div className="order-1 lg:order-2">
-              <div className="relative flex flex-col items-center justify-center p-4 md:p-8 overflow-visible">
-                <div className="w-full max-w-[350px] aspect-square mx-auto">
-                  <RotatingDeck playing={isPlaying} size="100%" />
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-[160px]">
-                    <DiscoWaveOrb isPlaying={isPlaying} currentSong={currentSong} />
+              {/* Main Layout */}
+              <div className="container mx-auto px-4 py-4 md:p-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="lg:col-span-2 space-y-4 md:space-y-6 order-2 lg:order-1">
+                <SearchBar onResultSelect={handleVideoSelect} />
+                <AnalyticsDashboard eventId={eventData?.id} />
+              </div>
+
+              <div className="order-1 lg:order-2">
+                <div className="relative flex flex-col items-center justify-center p-4 md:p-8 overflow-visible">
+                  <div className="w-full max-w-[350px] aspect-square mx-auto">
+                    <RotatingDeck playing={isPlaying} size="100%" />
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-[160px]">
+                      <DiscoWaveOrb isPlaying={isPlaying} currentSong={currentSong} />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Bottom Player */}
-        <div className="fixed bottom-0 inset-x-0 z-10 xl:right-80 pb-[env(safe-area-inset-bottom)]">
-          <Player />
-          <FloatingDock />
-        </div>
+          {/* Bottom FloatingDock */}
+          <div className="fixed bottom-0 inset-x-0 z-10 xl:right-80 pb-[env(safe-area-inset-bottom)]">
+            <FloatingDock />
+          </div>
       </div>
 
       {/* Desktop Side Panel */}
@@ -131,7 +161,10 @@ function App() {
         <div className="h-[env(safe-area-inset-bottom)] bg-gray-900" />
       </div>
     </div>
-  );
-}
+          } />
+        </Routes>
+      </>
+    );
+  }
 
 export default App;
