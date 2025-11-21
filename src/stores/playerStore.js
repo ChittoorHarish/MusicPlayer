@@ -69,13 +69,32 @@ const usePlayerStore = create((set, get) => ({
   playPause: () => {
     const player = get().playerInstance;
     const isPlaying = get().isPlaying;
+    const currentSong = get().currentSong;
+    
     if (player) {
       try {
-        if (isPlaying) player.pauseVideo();
-        else player.playVideo();
+        // Check if it's a local audio file or YouTube
+        if (currentSong?.source === 'local') {
+          // Local audio uses play() and pause()
+          if (isPlaying) {
+            player.pause();
+          } else {
+            player.play();
+          }
+        } else {
+          // YouTube uses playVideo() and pauseVideo()
+          if (isPlaying) {
+            player.pauseVideo();
+          } else {
+            player.playVideo();
+          }
+        }
       } catch (error) {
         console.error('Error in playPause:', error);
       }
+    } else {
+      // No player instance, just toggle state
+      set({ isPlaying: !isPlaying });
     }
   },
 

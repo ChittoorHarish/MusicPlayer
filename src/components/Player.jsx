@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import YouTubePlayer from './YouTubePlayer';
+import LocalAudioPlayer from './LocalAudioPlayer';
 import VideoPreviewModal from './modals/VideoPreviewModal';
 import usePlayerStore from '../stores/playerStore';
 import useQueueStore from '../stores/queueStore';
@@ -26,13 +27,16 @@ export default function Player() {
   // Update video ID when current song changes
   useEffect(() => {
     if (currentSong) {
-      console.log('Current song changed to:', currentSong.title);
+      console.log('🎵 Player: Current song changed to:', currentSong.title);
+      console.log('🎵 Player: Song source:', currentSong.source);
+      console.log('🎵 Player: File URL:', currentSong.fileUrl);
       setCurrentVideoId(currentSong.id);
       if (currentSong.isVideo) {
         setIsPreviewOpen(true);
       }
       // Auto-play for host when song changes
       if (userRole === 'host' || userRole === 'subhost') {
+        console.log('🎵 Player: Auto-playing (user is host/subhost)');
         setIsPlaying(true);
       }
     }
@@ -81,18 +85,38 @@ export default function Player() {
     }
   };
 
+  // Debug: Log what player is being rendered
+  useEffect(() => {
+    if (currentVideoId && currentSong) {
+      console.log('🎵 Player: Rendering', currentSong.source === 'local' ? 'LocalAudioPlayer' : 'YouTubePlayer');
+    }
+  }, [currentVideoId, currentSong]);
+
   return (
     <>
-      <div style={{ display: 'none' }}>
-        {currentVideoId && (
+      {/* Local Audio Player - Visible for debugging and effects UI */}
+      {currentVideoId && currentSong?.source === 'local' && (
+        <div className="w-full my-4 px-4">
+          <LocalAudioPlayer
+            fileUrl={currentSong.fileUrl}
+            trackId={currentVideoId}
+            onStateChange={handleStateChange}
+            onError={handleError}
+          />
+        </div>
+      )}
+      
+      {/* YouTube Player - Hidden */}
+      {currentVideoId && currentSong?.source !== 'local' && (
+        <div className="hidden">
           <YouTubePlayer
             videoId={currentVideoId}
             onStateChange={handleStateChange}
             onError={handleError}
             isVideo={currentSong?.isVideo}
           />
-        )}
-      </div>
+        </div>
+      )}
       {currentSong?.isVideo && isPreviewOpen && (
         <VideoPreviewModal
           isOpen={isPreviewOpen}

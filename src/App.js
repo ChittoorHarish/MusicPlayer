@@ -9,6 +9,7 @@ import Player from "./components/Player";
 import RotatingDeck from "./components/RotatingDeck";
 import DiscoWaveOrb from "./components/DiscoWaveOrb";
 import SearchBar from "./components/SearchBar";
+import AudioEffectsBar from "./components/AudioEffectsBar";
 import FloatingDock from "./components/player/FloatingDock";
 import AnalyticsDashboard from "./components/analytics/AnalyticsDashboard";
 import useEventStore from "./stores/eventStore";
@@ -25,6 +26,7 @@ function App() {
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentSong = usePlayerStore((state) => state.currentSong);
   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const setIsPlaying = usePlayerStore((state) => state.setIsPlaying);
   const { role, userId } = useRoleStore();
 
   React.useEffect(() => {
@@ -50,7 +52,14 @@ function App() {
     };
 
     addToQueue(songToAdd, addedBy);
-    if (!currentSong) setCurrentSong(songToAdd);
+    
+    // For local files, always start playing immediately
+    if (video.source === 'local') {
+      setCurrentSong(songToAdd);
+      setIsPlaying(true);
+    } else if (!currentSong) {
+      setCurrentSong(songToAdd);
+    }
   };
 
   return (
@@ -61,6 +70,7 @@ function App() {
         {/* Header */}
         <div className="sticky top-0 z-20 bg-gradient-to-b from-gray-900 to-black">
           <EventHeader />
+          <AudioEffectsBar />
         </div>
 
         {/* Main Layout */}

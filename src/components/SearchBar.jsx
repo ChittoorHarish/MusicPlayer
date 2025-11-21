@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { searchMusic } from '../services/youtube';
+import FileUploadSearch from './FileUploadSearch';
 import VideoPreviewModal from './modals/VideoPreviewModal';
 import { MusicalNoteIcon, VideoCameraIcon } from '@heroicons/react/24/solid';
 import { Switch } from '@headlessui/react';
@@ -14,11 +15,13 @@ const SearchBar = ({ onResultSelect }) => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isVideoMode, setIsVideoMode] = useState(false);
+  const [musicSource, setMusicSource] = useState('youtube'); // 'youtube' or 'local'
 
   const handleSearch = async (e, pageToken = '') => {
     if (e) e.preventDefault();
     if (!query.trim()) return;
 
+    console.log('🔍 Starting YouTube search for:', query, 'pageToken:', pageToken);
     setLoading(true);
     setError(null);
 
@@ -30,7 +33,9 @@ const SearchBar = ({ onResultSelect }) => {
     }
 
     try {
+      console.log('🔍 Calling searchMusic API...');
       const { results: searchResults, nextPageToken: nextToken } = await searchMusic(query, pageToken);
+      console.log('✅ Search results received:', searchResults.length, 'videos');
       setResults(searchResults);
 
       // Update page token history for Back button
@@ -40,8 +45,9 @@ const SearchBar = ({ onResultSelect }) => {
 
       setNextPageToken(nextToken || null);
     } catch (err) {
-      console.error('Search error:', err);
-      setError('Failed to search videos. Please try again.');
+      console.error('❌ Search error:', err);
+      console.error('Error message:', err.message);
+      setError(err.message || 'Failed to search videos. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +68,38 @@ const SearchBar = ({ onResultSelect }) => {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
-            <form onSubmit={handleSearch} className="mb-4">
+      {/* Source Toggle */}
+      <div className="mb-4 flex items-center justify-center gap-3 p-2 bg-white/5 rounded-lg border border-white/10">
+        <button
+          type="button"
+          onClick={() => setMusicSource('youtube')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            musicSource === 'youtube'
+              ? 'bg-red-500 text-white shadow-lg'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          🎬 YouTube
+        </button>
+        <button
+          type="button"
+          onClick={() => setMusicSource('local')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            musicSource === 'local'
+              ? 'bg-green-500 text-white shadow-lg'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          📁 Local Files (All Effects Work!)
+        </button>
+      </div>
+
+      {/* Show FileUploadSearch or YouTube search based on source */}
+      {musicSource === 'local' ? (
+        <FileUploadSearch onResultSelect={onResultSelect} />
+      ) : (
+        <>
+          <form onSubmit={handleSearch} className="mb-4">
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -179,6 +216,8 @@ const SearchBar = ({ onResultSelect }) => {
           setSelectedVideo(null);
         }}
       />
+      </>
+      )}
     </div>
   );
 };

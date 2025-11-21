@@ -12,6 +12,7 @@ import { useRoleStore } from "./roleStore";
 
 const useQueueStore = create((set, get) => ({
   queue: [],
+  localQueue: [], // For local files only (not synced to Firebase)
   roomId: null,
   unsubscribe: null,
 
@@ -44,6 +45,22 @@ const useQueueStore = create((set, get) => ({
 
   /** 🔹 Add a song to queue — detects Host or Guest automatically */
   addToQueue: async (song) => {
+    // Handle local files separately (not synced to Firebase)
+    if (song.source === 'local') {
+      const localSong = {
+        ...song,
+        addedBy: 'local',
+        timestamp: Date.now(),
+      };
+      delete localSong.file; // Remove File object
+      
+      set((state) => ({
+        localQueue: [...state.localQueue, localSong],
+        queue: [...state.queue, localSong] // Add to combined queue for display
+      }));
+      return;
+    }
+
     const { roomId } = get();
     if (!roomId) {
       console.warn("No roomId set in queueStore.");
@@ -73,7 +90,16 @@ const useQueueStore = create((set, get) => ({
 
   /** 🔹 Remove a song from the queue */
   removeItem: async (index) => {
-    const { queue, roomId } = get();
+    const { queue, roomId, localQueue } = get();
+    
+    // Check if it's a local file
+    if (queue[index]?.source === 'local') {
+      const updatedQueue = queue.filter((_, i) => i !== index);
+      const updatedLocalQueue = localQueue.filter((_, i) => i !== index);
+      set({ queue: updatedQueue, localQueue: updatedLocalQueue });
+      return;
+    }
+    
     if (!roomId) return;
 
     const queueRef = doc(db, "queues", roomId);
@@ -102,11 +128,11 @@ const useQueueStore = create((set, get) => ({
   stopListener: () => {
     const unsub = get().unsubscribe;
     if (unsub) unsub();
-    set({ unsubscribe: null, queue: [] });
+    set({ unsubscribe: null, queue: [], localQueue: [] });
   },
 
   clearQueue: () => {
-    set({ queue: [] });
+    set({ queue: [], localQueue: [] });
   },
 }));
 
